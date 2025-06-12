@@ -1,15 +1,16 @@
-import { Link, router, Stack } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { Link, router, Stack } from "expo-router";
+import { StyleSheet } from "react-native";
 
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useCallback, useEffect, useState } from 'react';
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { useCallback, useEffect, useState } from "react";
 
 export default function QRScanScreen() {
+  console.log('QRScanScreen222')
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const [credentialOfferUri, setCredentialOfferUri] = useState('');
+  const [credentialOfferUri, setCredentialOfferUri] = useState("");
 
   useEffect(() => {
     if (permission && !permission.granted) {
@@ -22,10 +23,10 @@ export default function QRScanScreen() {
 
     // Todo: Remove this mock URI
     const mockCredentialOfferUri =
-      'https://issuer.dev.hopae.com/credential-offer';
+      "https://issuer.dev.hopae.com/credential-offer";
 
     router.replace({
-      pathname: '/Issue/CredentialOffer',
+      pathname: "/Issue/CredentialOffer",
       params: { credentialOfferUri: mockCredentialOfferUri },
     });
   }, [credentialOfferUri]);
@@ -40,22 +41,24 @@ export default function QRScanScreen() {
       const regex = /credential_offer_uri=([^&]+)/;
       const match = uri.match(regex);
 
+      console.log({ match });
+
       if (match && match[1]) {
         const decodedUri = decodeURIComponent(match[1]);
 
-        console.log('추출한 디코딩된 URI:', decodedUri);
+        console.log("추출한 디코딩된 URI:", decodedUri);
 
         setCredentialOfferUri(decodedUri);
       } else {
-        console.error('credential_offer_uri를 찾을 수 없습니다.');
+        console.error("credential_offer_uri를 찾을 수 없습니다.");
       }
     },
-    [scanned],
+    [scanned]
   );
 
   return (
     <>
-      <Stack.Screen options={{ title: 'QR Scan', headerBackTitle: 'Back' }} />
+      <Stack.Screen options={{ title: "QR Scan", headerBackTitle: "Back" }} />
       <ThemedView style={styles.container}>
         <ThemedText type="title">QR Scanner</ThemedText>
         <Link href="/" style={styles.link}>
@@ -64,7 +67,7 @@ export default function QRScanScreen() {
         <CameraView
           facing="back"
           barcodeScannerSettings={{
-            barcodeTypes: ['qr'],
+            barcodeTypes: ["qr"],
           }}
           onBarcodeScanned={handleBarcodeScanned}
           style={StyleSheet.absoluteFillObject}
@@ -77,8 +80,8 @@ export default function QRScanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
   link: {

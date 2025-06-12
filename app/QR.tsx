@@ -1,4 +1,4 @@
-import { router, Stack, useFocusEffect } from 'expo-router';
+import { router, Stack, useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -6,26 +6,27 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-} from 'react-native';
+} from "react-native";
 
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useCallback, useEffect, useState } from 'react';
-import { Dimensions } from 'react-native';
-import { useVerifyMetadataMutation } from '@/queries';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { useCallback, useEffect, useState } from "react";
+import { Dimensions } from "react-native";
+import { useVerifyMetadataMutation } from "@/queries";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const SCAN_AREA_SIZE = { width: 250, height: 250 };
 
-export default function VerifyQRScanScreen() {
+export default function QRScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const [verifyRequestUri, setVerifyRequestUri] = useState('');
+  const [verifyRequestUri, setVerifyRequestUri] = useState("");
+  const [credentialOfferUri, setCredentialOfferUri] = useState("");
 
   useFocusEffect(
     useCallback(() => {
       setScanned(false);
-      setVerifyRequestUri('');
-    }, []),
+      setVerifyRequestUri("");
+    }, [])
   );
 
   useEffect(() => {
@@ -35,11 +36,20 @@ export default function VerifyQRScanScreen() {
   }, [permission, requestPermission]);
 
   useEffect(() => {
+    if (!credentialOfferUri) return;
+
+    router.replace({
+      pathname: "/Issue/CredentialOffer",
+      params: { credentialOfferUri },
+    });
+  }, [credentialOfferUri]);
+
+  useEffect(() => {
     if (!verifyRequestUri) return;
 
     // @Description: After parsing verifyRequestUri, navigate to SelectCredential screen and then fetch verifyRequestUri
     router.navigate({
-      pathname: '/Verify/SelectCredential',
+      pathname: "/Verify/SelectCredential",
       params: { verifyRequestUri },
     });
   }, [verifyRequestUri]);
@@ -53,8 +63,8 @@ export default function VerifyQRScanScreen() {
       if (scanned) return;
 
       // 화면 중앙의 스캔 영역 계산
-      const screenWidth = Dimensions.get('window').width;
-      const screenHeight = Dimensions.get('window').height;
+      const screenWidth = Dimensions.get("window").width;
+      const screenHeight = Dimensions.get("window").height;
 
       const scanArea = {
         x: (screenWidth - SCAN_AREA_SIZE.width) / 2,
@@ -77,21 +87,31 @@ export default function VerifyQRScanScreen() {
 
       const uri = event.data;
 
-      console.log('Scanned URI:', uri);
-      const regex = /request_uri=([^&]*)/;
-      const match = uri.match(regex);
+      console.log("Scanned URI:", uri);
+      const verifyRegex = /request_uri=([^&]*)/;
+      const verifyMatch = uri.match(verifyRegex);
+
+      const issueRegex = /credential_offer_uri=([^&]+)/;
+      const issueMatch = uri.match(issueRegex);
 
       //@Todo: check server uri
-
-      if (match && match[1]) {
-        const decodedUri = decodeURIComponent(match[1]);
-        console.log('추출한 디코딩된 URI:', decodedUri);
+      if (verifyMatch && verifyMatch[1]) {
+        const decodedUri = decodeURIComponent(verifyMatch[1]);
+        console.log("추출한 디코딩된 URI22222:", decodedUri);
         setVerifyRequestUri(decodedUri);
-      } else {
-        console.error('credential_offer_uri를 찾을 수 없습니다.');
+        return;
       }
+
+      if (issueMatch && issueMatch[1]) {
+        const decodedUri = decodeURIComponent(issueMatch[1]);
+        console.log("추출한 디코딩된 URI22222 issue:", uri);
+        setCredentialOfferUri(uri);
+        return;
+      }
+
+      console.error("credential_offer_uri를 찾을 수 없습니다.");
     },
-    [scanned],
+    [scanned]
   );
   return (
     <>
@@ -104,16 +124,16 @@ export default function VerifyQRScanScreen() {
         <CameraView
           facing="back"
           barcodeScannerSettings={{
-            barcodeTypes: ['qr'],
+            barcodeTypes: ["qr"],
           }}
           onBarcodeScanned={handleBarcodeScanned}
           style={StyleSheet.absoluteFillObject}
         />
         {permission && !permission.granted && (
           <ActivityIndicator
-            color={'white'}
+            color={"white"}
             size="large"
-            style={{ position: 'absolute' }}
+            style={{ position: "absolute" }}
           />
         )}
         <View style={styles.overlay}>
@@ -142,11 +162,11 @@ export default function VerifyQRScanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -154,37 +174,37 @@ const styles = StyleSheet.create({
   },
   overlaySection: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: "rgba(0,0,0,0.6)",
   },
   closeButton: {
     marginTop: 50,
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     right: 0,
     zIndex: 1,
     padding: 18,
   },
   overlayTextSection: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
     paddingTop: 20,
-    color: 'white',
+    color: "white",
   },
   overlayText: {
-    color: 'white',
+    color: "white",
   },
   scanArea: {
     width: SCAN_AREA_SIZE.width,
     height: SCAN_AREA_SIZE.height,
-    backgroundColor: 'transparent',
-    position: 'relative',
-    overflow: 'hidden',
-    borderColor: 'white',
+    backgroundColor: "transparent",
+    position: "relative",
+    overflow: "hidden",
+    borderColor: "white",
     borderWidth: 1,
   },
   centerRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     height: SCAN_AREA_SIZE.height,
   },
   centerSection: {

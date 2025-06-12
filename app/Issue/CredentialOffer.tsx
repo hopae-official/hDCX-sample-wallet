@@ -1,46 +1,51 @@
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { ActivityIndicator, StyleSheet } from "react-native";
+import { ThemedView } from "@/components/ThemedView";
+import { useEffect } from "react";
+import { useWallet } from "@/contexts/WalletContext";
 
-import { ThemedView } from '@/components/ThemedView';
-import { useCredentialOfferQuery } from '@/queries';
-import { useEffect } from 'react';
+const jwk = {
+  kty: "EC",
+  d: "hUQznqxINndxBHI8hMHvQmgSjYOCSqLUwMtzWCrh4ow",
+  crv: "P-256",
+  x: "ifSgGMkEIEDPsxFxdOjeJxhYsz0STsTT5bni_MXNEJs",
+  y: "viFDEvB61K6zuj2iq23j0FCmVYYQ8tGJ_3f35XXUDZ0",
+} as const;
 
-// Todo: Remove this mock URI
-const mockCredentialOfferUri = 'https://issuer.dev.hopae.com/credential-offer';
+type AnimoCredentialResponse = {
+  credential: string;
+};
 
 export default function CredentialOfferScreen() {
-  const params = useLocalSearchParams<{ credentialOfferUri: string }>();
-
-  const { data, isLoading } = useCredentialOfferQuery({
-    credentialOfferUri: mockCredentialOfferUri,
-  });
-
-  const preAuthorizedCode =
-    data?.grants['urn:ietf:params:oauth:grant-type:pre-authorized_code'][
-      'pre-authorized_code'
-    ];
-  const credentialIssuer = data?.credential_issuer;
+  const { credentialOfferUri } = useLocalSearchParams<{
+    credentialOfferUri: string;
+  }>();
+  const walletSDK = useWallet();
 
   useEffect(() => {
-    if (!preAuthorizedCode) return;
+    if (!credentialOfferUri || !walletSDK) return;
 
-    setTimeout(() => {
+    (async function receiveCredential() {
+      // @Todo: fix type (Animo credential response does not match with type)
+      const { credential } = (await walletSDK.receive(
+        credentialOfferUri
+      )) as unknown as AnimoCredentialResponse;
+
+      // @Todo: Remove the mock credential type
       router.replace({
-        pathname: '/Issue/TokenRequestStep',
-        params: { preAuthorizedCode, credentialIssuer },
+        pathname: "/Issue/CredentialConfirm",
+        params: { credential: credential, type: "FunkeAnimo" },
       });
-    }, 1000);
-  }, [preAuthorizedCode]);
-
-  //@Todo: Remove useless screen
+    })();
+  }, [credentialOfferUri, walletSDK]);
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Credential Offer Step' }} />
+      <Stack.Screen options={{ title: "Receiving Credential" }} />
       <ThemedView style={styles.container}>
         <ActivityIndicator
           style={styles.loadingSpinner}
-          color={'black'}
+          color={"black"}
           size="large"
         />
       </ThemedView>
@@ -51,23 +56,23 @@ export default function CredentialOfferScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
   },
   descWrapper: {
     gap: 8,
-    borderColor: 'black',
+    borderColor: "black",
     borderWidth: 1,
     padding: 10,
     borderRadius: 5,
     height: 400,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   descText: {
     fontSize: 16,
