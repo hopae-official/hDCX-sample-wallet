@@ -44,6 +44,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.67.3
         version: 5.80.7(react@19.0.0)
+      '@vdcs/jwt':
+        specifier: ^0.1.4
+        version: 0.1.4
       '@vdcs/oid4vci-client':
         specifier: ^0.1.4
         version: 0.1.4

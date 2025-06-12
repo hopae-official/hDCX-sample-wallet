@@ -2,8 +2,8 @@ export type CredentialOffer = {
   credential_issuer: string;
   credential_configuration_ids: Array<string>;
   grants: {
-    'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
-      'pre-authorized_code': string;
+    "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+      "pre-authorized_code": string;
       tx_code: {
         length: number;
         input_mode: string;
@@ -16,16 +16,15 @@ export type CredentialOffer = {
 export type Claim = {
   iss: string;
   vct: string;
-  name: string;
-  birthdate: string;
+  [key: string]: string;
 };
 
 export type CredentialType =
-  | 'UniversityDegreeCredential'
-  | 'DriverLicenseCredential'
-  | 'VaccinationCredential';
+  | "UniversityDegreeCredential"
+  | "DriverLicenseCredential"
+  | "VaccinationCredential";
 
-export const CREDENTIALS_STORAGE_KEY = '@credentials';
+export const CREDENTIALS_STORAGE_KEY = "@credentials";
 
 export type Credential = {
   type: CredentialType;
@@ -36,10 +35,10 @@ export const CredentialInfoMap: Record<
   CredentialType,
   { label: string; icon: string }
 > = {
-  UniversityDegreeCredential: { label: 'University Diploma', icon: 'school' },
-  DriverLicenseCredential: { label: "Driver's License", icon: 'car' },
+  UniversityDegreeCredential: { label: "University Diploma", icon: "school" },
+  DriverLicenseCredential: { label: "Driver's License", icon: "car" },
   VaccinationCredential: {
-    label: 'Vaccination Certificate',
-    icon: 'hospital-box',
+    label: "Vaccination Certificate",
+    icon: "hospital-box",
   },
 } as const;

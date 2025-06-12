@@ -33,71 +33,46 @@ import { useSharedValue } from "react-native-reanimated";
 import { Colors } from "@/constants/Colors";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useVerifyCredentialMutation } from "@/queries";
+import { decodeJWT } from "@vdcs/jwt";
+import { useWallet } from "@/contexts/WalletContext";
 
-//@Todo: Remove mock credential
-const mockCredential =
-  "eyJ0eXAiOiJkYytzZC1qd3QiLCJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJodHRwczovL2lzc3Vlci5kZXYuaG9wYWUuY29tL2NyZWRlbnRpYWxzL3R5cGVzL3VuaXZlcnNpdHkiLCJpc3MiOiJodHRwczovL2lzc3Vlci5kZXYuaG9wYWUuY29tIiwiX3NkIjpbIllwbm15VzdZemJ0ejFOODZVZjJadGNBNldoM0NVR1cyT0c1SjNFcVozYm8iLCJ0NXdmZE5CMWJuS1Nlcjkybm9QZXZaSW5fMm1MV0F0Q1lDTG1ac0dFR0xNIl0sIl9zZF9hbGciOiJzaGEtMjU2In0.k--1y8ivPJrjX0gD3CA9mZLIkIHs8zJPdohNFYzJ5jdf1736HDkGHgy3pT1hnNXF-vm0GKrwBSmueX3y8pIbtA~WyI5YjQwZjc1ODFiNzY4OGY5IiwibmFtZSIsIkpvaG4gRG9lIl0~WyJjOGZiNDNjNGFjMGMwMDVmIiwiYmlydGhkYXRlIiwiMTk5MC0wMS0wMSJd~";
-const mockResponseUri = "https://verifier.dev.hopae.com/request"; // mock endpoint to present VP
-const requiredClaims = ["iss", "vct", "name"];
+const requiredClaims = ["iss", "vct"];
 
 export default function SelectCredentialScreen() {
+  const walletSDK = useWallet();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const credential = credentials[0]?.credential;
   const selectedCredential = credentials[currentIndex]?.credential;
 
-  const params = useLocalSearchParams<{ verifyRequestUri: string }>();
-  const verifyRequestUri = params.verifyRequestUri;
+  const params = useLocalSearchParams<{ requestUri: string }>();
+  const requestUri = params.requestUri;
 
-  const { mutate: verifyCredentialMutate } = useVerifyCredentialMutation({
-    verifyRequestUri,
-    onSuccess: async (data) => {
-      console.log("Verify success:", data);
-      router.replace({
-        pathname: "/Verify/VerifyResult",
-        params: { result: data },
-      });
-    },
-    onError: (error) => {
-      console.error("Error verifying credential:", error);
-      router.replace({
-        pathname: "/Verify/VerifyResult",
-        params: { result: null },
-      });
-    },
-  });
+  useEffect(() => {
+    if (!requestUri) return;
+
+    (async function requestAuthorization() {
+      const res = await axios.get(requestUri);
+      console.log("Verify request:", res.data);
+
+      const requestObject = res.data;
+
+      const parsedRequestObject = decodeJWT(requestObject);
+
+      console.log("Parsed request object:", parsedRequestObject);
+    })();
+  }, [requestUri]);
 
   const claims: Claim | null = credential
     ? (() => {
         const decoded = decodeSDJWT(credential).claims;
-        return isValidClaim<Claim>(decoded, ["iss", "vct", "name", "birthdate"])
-          ? decoded
-          : null;
+        return isValidClaim<Claim>(decoded, ["iss", "vct"]) ? decoded : null;
       })()
     : null;
 
   const handlePressAccept = () => {
-    verifyCredentialMutate(
-      { selectedCredential },
-      {
-        onSuccess: async (data) => {
-          console.log("result22", data);
-          router.replace({
-            pathname: "/Verify/VerifyResult",
-            params: { result: data },
-          });
-        },
-        onError: (error) => {
-          console.error("Error verifying credential:", error);
-          router.replace({
-            pathname: "/Verify/VerifyResult",
-            params: { result: null },
-          });
-        },
-      }
-    );
+   
   };
 
   const handlePressDeny = () => {
@@ -122,8 +97,7 @@ export default function SelectCredentialScreen() {
   const [selectedOptions, setSelectedOptions] = useState({
     iss: true, // required
     vct: true, // required
-    name: true, // required
-    birthdate: false, // optional
+    ...claims,
   });
 
   const toggleOption = (option: keyof typeof selectedOptions) => {
@@ -169,7 +143,7 @@ export default function SelectCredentialScreen() {
         bounces={false}
       >
         <Text style={styles.title}>
-          An organisation is asking for information
+          An organization is asking for information
         </Text>
 
         <View
@@ -202,7 +176,7 @@ export default function SelectCredentialScreen() {
                     <View style={styles.cardContent}>
                       <View style={styles.circleImage}>
                         <Ionicons
-                          name="school-outline"
+                          name="wallet-outline"
                           size={24}
                           color={"gray"}
                         />
@@ -230,7 +204,7 @@ export default function SelectCredentialScreen() {
             <Ionicons name="newspaper" size={15} color={"gray"} />
           </View>
           <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.boldText}>Hopae Inc.</Text>
+            <Text style={styles.boldText}>{claims.iss}</Text>
             <Ionicons
               name="checkmark-circle-outline"
               size={20}
@@ -253,41 +227,43 @@ export default function SelectCredentialScreen() {
             </View>
 
             <Card style={styles.infoWrapper}>
-              <View style={styles.optionWrapper}>
-                <Ionicons name="checkbox-outline" size={20} color={"black"} />
-                <View>
-                  <Text style={styles.infoLabelText}>ISS (required)</Text>
-                  <Text style={styles.infoText}>{claims.iss}</Text>
-                </View>
-              </View>
-              <View style={styles.optionWrapper}>
-                <Ionicons name="checkbox-outline" size={20} color={"black"} />
-                <View>
-                  <Text style={styles.infoLabelText}>VCT (required)</Text>
-                  <Text style={styles.infoText}>{claims.vct}</Text>
-                </View>
-              </View>
-              <View style={styles.optionWrapper}>
-                <Ionicons name="checkbox-outline" size={20} color={"black"} />
-                <View>
-                  <Text style={styles.infoLabelText}>Name (required)</Text>
-                  <Text style={styles.infoText}>{claims.name}</Text>
-                </View>
-              </View>
+              {Object.entries(claims)
+                .filter(([_, value]) => {
+                  if (typeof value !== "string") return false;
 
-              <View style={styles.optionWrapper}>
-                <TouchableOpacity onPress={() => toggleOption("birthdate")}>
-                  <Ionicons
-                    name="checkbox-outline"
-                    size={20}
-                    color={selectedOptions.birthdate ? "green" : "lightgray"}
-                  />
-                </TouchableOpacity>
-                <View>
-                  <Text style={styles.infoLabelText}>Birthdate (optional)</Text>
-                  <Text style={styles.infoText}>{claims.birthdate}</Text>
-                </View>
-              </View>
+                  return !value.startsWith("data:image");
+                })
+                .map(([key, value]) => (
+                  <View style={styles.optionWrapper} key={key}>
+                    <TouchableOpacity
+                      onPress={() =>
+                        toggleOption(key as keyof typeof selectedOptions)
+                      }
+                      disabled={requiredClaims.includes(key)}
+                    >
+                      <Ionicons
+                        name="checkbox-outline"
+                        size={20}
+                        color={
+                          requiredClaims.includes(key)
+                            ? "black"
+                            : selectedOptions[
+                                key as keyof typeof selectedOptions
+                              ]
+                            ? "green"
+                            : "lightgray"
+                        }
+                      />
+                    </TouchableOpacity>
+                    <View>
+                      <Text style={styles.infoLabelText}>
+                        {key.replace(/_/g, " ").toUpperCase()}
+                        {requiredClaims.includes(key) && " (required)"}
+                      </Text>
+                      <Text style={styles.infoText}>{value}</Text>
+                    </View>
+                  </View>
+                ))}
             </Card>
           </Card>
         </View>

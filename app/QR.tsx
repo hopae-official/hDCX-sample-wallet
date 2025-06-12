@@ -50,7 +50,7 @@ export default function QRScanScreen() {
     // @Description: After parsing verifyRequestUri, navigate to SelectCredential screen and then fetch verifyRequestUri
     router.navigate({
       pathname: "/Verify/SelectCredential",
-      params: { verifyRequestUri },
+      params: { requestUri: verifyRequestUri },
     });
   }, [verifyRequestUri]);
 
@@ -97,14 +97,12 @@ export default function QRScanScreen() {
       //@Todo: check server uri
       if (verifyMatch && verifyMatch[1]) {
         const decodedUri = decodeURIComponent(verifyMatch[1]);
-        console.log("추출한 디코딩된 URI22222:", decodedUri);
+        console.log("추출한 디코딩된 URI22222 verify:", decodedUri);
         setVerifyRequestUri(decodedUri);
         return;
       }
 
       if (issueMatch && issueMatch[1]) {
-        const decodedUri = decodeURIComponent(issueMatch[1]);
-        console.log("추출한 디코딩된 URI22222 issue:", uri);
         setCredentialOfferUri(uri);
         return;
       }
