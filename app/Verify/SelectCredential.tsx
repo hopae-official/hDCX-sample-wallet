@@ -5,6 +5,7 @@ import {
   useLocalSearchParams,
 } from "expo-router";
 import {
+  Alert,
   ImageBackground,
   ScrollView,
   StyleSheet,
@@ -38,10 +39,17 @@ import { useWallet } from "@/contexts/WalletContext";
 
 const requiredClaims = ["iss", "vct"];
 
+// @Todo: fix presentationFrame matching dcql
+const presentationFrame = {
+  family_name: true,
+  given_name: true,
+};
+
 export default function SelectCredentialScreen() {
   const walletSDK = useWallet();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [requestObject, setRequestObject] = useState<any>({});
 
   const credential = credentials[0]?.credential;
   const selectedCredential = credentials[currentIndex]?.credential;
@@ -60,6 +68,8 @@ export default function SelectCredentialScreen() {
 
       const parsedRequestObject = decodeJWT(requestObject);
 
+      setRequestObject(parsedRequestObject);
+
       console.log("Parsed request object:", parsedRequestObject);
     })();
   }, [requestUri]);
@@ -71,8 +81,39 @@ export default function SelectCredentialScreen() {
       })()
     : null;
 
-  const handlePressAccept = () => {
-   
+  const handlePressAccept = async () => {
+    if (!walletSDK || !claims || !selectedCredential) return;
+
+    const vp = await walletSDK.present(selectedCredential, presentationFrame);
+
+    console.log("vp ****", vp);
+
+    if (!vp) return;
+
+    try {
+      // @Todo: Replace mock key to sync with dcql query id
+      const res = await axios.post(
+        requestObject.payload.response_uri,
+        {
+          vp_token: { 0: vp },
+          state: requestObject.payload.state,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      router.replace({
+        pathname: "/Verify/VerifyResult",
+      });
+    } catch (e) {
+      console.log("Error:", e);
+      const errorMessage =
+        e instanceof Error ? e.message : "Failed to verify credential";
+      Alert.alert("Error", errorMessage);
+    }
   };
 
   const handlePressDeny = () => {
@@ -163,7 +204,6 @@ export default function SelectCredentialScreen() {
             onProgressChange={progress}
             onScrollEnd={(_index) => {
               setCurrentIndex(_index);
-              console.log("scroll end index:", _index);
             }}
             snapEnabled={true}
             renderItem={({ index, item }) => (
