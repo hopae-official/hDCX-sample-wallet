@@ -1,4 +1,4 @@
-import { WalletSDK, ExpoSecureStore, InMemoryStorage } from "@hdcx/wallet-core";
+import { ExpoSecureStore, WalletSDK } from "dvlprsh-wallet-core-test";
 import { createContext, useContext, ReactNode } from "react";
 
 const jwk = {
@@ -11,7 +11,7 @@ const jwk = {
 
 // 단일 WalletSDK 인스턴스 생성
 const walletSDK = new WalletSDK({
-  storage: new InMemoryStorage(),
+  storage: new ExpoSecureStore(),
   jwk,
 });
 

@@ -1,7 +1,7 @@
-import { CredentialType } from "@/types";
 import { parseMDL } from "./mdl";
 import { decodeSdJwtSync, getClaimsSync } from "@sd-jwt/decode";
 import { hasher } from "@sd-jwt/hash";
+import { Format } from "@/app/Issue/types";
 
 export function decodeSDJWT(sdjwt: string) {
   const decoded = decodeSdJwtSync(sdjwt, hasher);
@@ -29,14 +29,18 @@ export function isValidClaim<T extends object>(
 
 export function getCredentialClaims({
   credential,
-  type,
+  format,
 }: {
   credential: string;
-  type: CredentialType;
+  format: Format;
 }) {
-  if (type === "DriverLicenseCredential") {
+  if (format === "mso_mdoc") {
     return parseMDL(credential);
   }
 
-  return decodeSDJWT(credential).claims;
+  if (format === "dc+sd-jwt") {
+    return decodeSDJWT(credential).claims;
+  }
+
+  throw new Error("Unsupported format");
 }

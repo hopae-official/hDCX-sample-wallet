@@ -1,3 +1,5 @@
+import { Format } from "@vdcs/oid4vci";
+
 export type CredentialOffer = {
   credential_issuer: string;
   credential_configuration_ids: Array<string>;
@@ -27,7 +29,7 @@ export type CredentialType =
 export const CREDENTIALS_STORAGE_KEY = "@credentials";
 
 export type Credential = {
-  type: CredentialType;
+  format: Format;
   credential: string;
 };
 
@@ -42,3 +44,10 @@ export const CredentialInfoMap: Record<
     icon: "hospital-box",
   },
 } as const;
+
+export type StoredCredential = {
+  raw: string;
+  iss: string;
+  vct: string;
+  [key: string]: unknown;
+};

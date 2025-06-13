@@ -9,19 +9,15 @@ import {
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Card } from "@/components/ui/card";
-import { CredentialInfoMap, CredentialType } from "@/types";
-import { getCredentialClaims } from "@/utils";
 import { Colors } from "@/constants/Colors";
 
 export default function CredentialDetailScreen() {
   const params = useLocalSearchParams<{
     credential: string;
-    type: CredentialType;
   }>();
-  const credential = params.credential;
-  const credentialType = params.type;
+  const { credential } = params;
 
-  const claims = getCredentialClaims({ credential, type: credentialType });
+  const claims = JSON.parse(credential);
 
   if (!claims) return <Text>No claims</Text>;
 
@@ -48,9 +44,7 @@ export default function CredentialDetailScreen() {
               <View style={styles.circleImage}>
                 <Ionicons name="wallet-outline" size={24} color={"gray"} />
               </View>
-              <Text style={styles.cardText}>
-                {CredentialInfoMap[credentialType]?.label}
-              </Text>
+              <Text style={styles.cardText}>{claims["credentialType"]}</Text>
             </View>
           </ImageBackground>
         </Card>
@@ -68,17 +62,24 @@ export default function CredentialDetailScreen() {
 
             <Card style={styles.infoWrapper}>
               {Object.entries(claims)
-                .filter(([_, value]) => {
-                  if (typeof value !== "string") return false;
+                .filter(([key, value]) => {
+                  if (typeof value !== "string" && typeof value !== "number")
+                    return false;
 
-                  return !value.startsWith("data:image");
+                  if (key === "raw") return false;
+
+                  return !(
+                    typeof value === "string" && value.startsWith("data:image")
+                  );
                 })
                 .map(([key, value]) => (
                   <View key={key}>
                     <Text style={styles.infoLabelText}>
                       {key.replace(/_/g, " ").toUpperCase()}
                     </Text>
-                    <Text style={styles.infoText}>{value}</Text>
+                    <Text style={styles.infoText}>
+                      {(value as string | number).toString()}
+                    </Text>
                   </View>
                 ))}
             </Card>

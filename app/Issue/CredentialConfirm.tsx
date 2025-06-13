@@ -10,49 +10,34 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Card } from "@/components/ui/card";
 import { Colors } from "@/constants/Colors";
 import { Button } from "@/components/ui/button";
-import { CREDENTIALS_STORAGE_KEY, CredentialType } from "@/types";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCredentialClaims } from "@/utils";
 import { useWallet } from "@/contexts/WalletContext";
+import { WalletSDK } from "dvlprsh-wallet-core-test";
+
+const jwk = {
+  kty: "EC",
+  d: "hUQznqxINndxBHI8hMHvQmgSjYOCSqLUwMtzWCrh4ow",
+  crv: "P-256",
+  x: "ifSgGMkEIEDPsxFxdOjeJxhYsz0STsTT5bni_MXNEJs",
+  y: "viFDEvB61K6zuj2iq23j0FCmVYYQ8tGJ_3f35XXUDZ0",
+} as const;
 
 export default function CredentialConfirmScreen() {
   const walletSDK = useWallet();
+
   const params = useLocalSearchParams<{
-    credentialType: CredentialType;
     credential: string;
   }>();
-  const credentialType = params.credentialType;
   const credential = params.credential;
 
   const claims = credential
-    ? getCredentialClaims({ credential, type: credentialType })
+    ? getCredentialClaims({ credential, format: "dc+sd-jwt" })
     : null;
 
-  console.log("claims", claims);
-
   const handlePressAccept = async () => {
-    // Get existing credentials from storage
-    const existingCredentials = await AsyncStorage.getItem(
-      CREDENTIALS_STORAGE_KEY
-    );
-    const credentials = existingCredentials
-      ? JSON.parse(existingCredentials)
-      : [];
-
-    // Add new credential to array
-    credentials.push({ type: credentialType, credential });
-
-    // Save updated credentials array
-    await AsyncStorage.setItem(
-      CREDENTIALS_STORAGE_KEY,
-      JSON.stringify(credentials)
-    );
-    console.log("walletSDK22", walletSDK);
-    if (!walletSDK) return;
-
     await walletSDK.credentialStore.saveCredential({
       credential,
-      format: "dc+sd-jwt", // @Todo: delete mock format
+      format: "dc+sd-jwt",
     });
 
     router.replace({ pathname: "/" });

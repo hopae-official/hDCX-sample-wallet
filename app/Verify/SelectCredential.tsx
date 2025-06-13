@@ -17,23 +17,15 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Ionicons } from "@expo/vector-icons";
-import { decodeSDJWT } from "@/utils";
-import {
-  Claim,
-  CREDENTIALS_STORAGE_KEY,
-  Credential,
-  CredentialInfoMap,
-} from "@/types";
+import { StoredCredential } from "@/types";
 import { Button } from "@/components/ui/button";
 import Carousel, {
   ICarouselInstance,
   Pagination,
 } from "react-native-reanimated-carousel";
-import { isValidClaim } from "@/utils";
 import { useSharedValue } from "react-native-reanimated";
 import { Colors } from "@/constants/Colors";
 import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { decodeJWT } from "@vdcs/jwt";
 import { useWallet } from "@/contexts/WalletContext";
 
@@ -47,12 +39,11 @@ const presentationFrame = {
 
 export default function SelectCredentialScreen() {
   const walletSDK = useWallet();
-  const [credentials, setCredentials] = useState<Credential[]>([]);
+  const [credentials, setCredentials] = useState<StoredCredential[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [requestObject, setRequestObject] = useState<any>({});
 
-  const credential = credentials[0]?.credential;
-  const selectedCredential = credentials[currentIndex]?.credential;
+  const selectedCredential = credentials[currentIndex];
 
   const params = useLocalSearchParams<{ requestUri: string }>();
   const requestUri = params.requestUri;
@@ -74,19 +65,14 @@ export default function SelectCredentialScreen() {
     })();
   }, [requestUri]);
 
-  const claims: Claim | null = credential
-    ? (() => {
-        const decoded = decodeSDJWT(credential).claims;
-        return isValidClaim<Claim>(decoded, ["iss", "vct"]) ? decoded : null;
-      })()
-    : null;
+  const claims = selectedCredential;
 
   const handlePressAccept = async () => {
-    if (!walletSDK || !claims || !selectedCredential) return;
+    const rawCredential = selectedCredential.raw;
 
-    const vp = await walletSDK.present(selectedCredential, presentationFrame);
+    if (!walletSDK || !rawCredential) return;
 
-    console.log("vp ****", vp);
+    const vp = await walletSDK.present(rawCredential, presentationFrame);
 
     if (!vp) return;
 
@@ -136,9 +122,9 @@ export default function SelectCredentialScreen() {
   };
 
   const [selectedOptions, setSelectedOptions] = useState({
+    ...claims,
     iss: true, // required
     vct: true, // required
-    ...claims,
   });
 
   const toggleOption = (option: keyof typeof selectedOptions) => {
@@ -152,15 +138,12 @@ export default function SelectCredentialScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      const loadCredentials = async () => {
-        const storedCredentials = await AsyncStorage.getItem(
-          CREDENTIALS_STORAGE_KEY
-        );
+      (async function loadCredentials() {
+        const storedCredentials =
+          await walletSDK.credentialStore.listCredentials();
 
         setCredentials(storedCredentials ? JSON.parse(storedCredentials) : []);
-      };
-
-      loadCredentials();
+      })();
     }, [])
   );
 
@@ -221,9 +204,7 @@ export default function SelectCredentialScreen() {
                           color={"gray"}
                         />
                       </View>
-                      <Text style={styles.cardText}>
-                        {CredentialInfoMap[item.type]?.label}
-                      </Text>
+                      <Text style={styles.cardText}>{claims.iss}</Text>
                     </View>
                   </ImageBackground>
                 </Card>
@@ -268,10 +249,15 @@ export default function SelectCredentialScreen() {
 
             <Card style={styles.infoWrapper}>
               {Object.entries(claims)
-                .filter(([_, value]) => {
-                  if (typeof value !== "string") return false;
+                .filter(([key, value]) => {
+                  if (typeof value !== "string" && typeof value !== "number")
+                    return false;
 
-                  return !value.startsWith("data:image");
+                  if (key === "raw") return false;
+
+                  return !(
+                    typeof value === "string" && value.startsWith("data:image")
+                  );
                 })
                 .map(([key, value]) => (
                   <View style={styles.optionWrapper} key={key}>
@@ -300,7 +286,9 @@ export default function SelectCredentialScreen() {
                         {key.replace(/_/g, " ").toUpperCase()}
                         {requiredClaims.includes(key) && " (required)"}
                       </Text>
-                      <Text style={styles.infoText}>{value}</Text>
+                      <Text style={styles.infoText}>
+                        {(value as string | number).toString()}
+                      </Text>
                     </View>
                   </View>
                 ))}

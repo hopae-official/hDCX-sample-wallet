@@ -1,7 +1,7 @@
-export type Format = 'dc+sd-jwt' | 'ldp_vc' | 'jwt_vc_json';
+export type Format = "dc+sd-jwt" | "ldp_vc" | "jwt_vc_json" | "mso_mdoc";
 
 export type TrustedAuthority = {
-  type: 'aki' | 'etsi_tl' | 'openid_federation';
+  type: "aki" | "etsi_tl" | "openid_federation";
   value: string[];
 };
 
@@ -47,7 +47,7 @@ export type Claims = {
 export type ClaimSet = string[];
 
 export type SdJwtVcCredentialQuery = Credential & {
-  format: 'dc+sd-jwt';
+  format: "dc+sd-jwt";
   meta: {
     vct_value: string;
   };
