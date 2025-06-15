@@ -132,7 +132,11 @@ export default function SelectCredentialScreen() {
     useCallback(() => {
       (async function selectCredentials() {
         try {
-          const storedCredentials = await walletSDK.selectCredentials();
+          if (!requestObject) return;
+
+          const storedCredentials = await walletSDK.selectCredentials(
+            requestObject.dcql_query
+          );
 
           setCredentials(
             storedCredentials ? JSON.parse(storedCredentials) : []
