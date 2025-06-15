@@ -9,7 +9,6 @@ const jwk = {
   y: "viFDEvB61K6zuj2iq23j0FCmVYYQ8tGJ_3f35XXUDZ0",
 } as const;
 
-// 단일 WalletSDK 인스턴스 생성
 const walletSDK = new WalletSDK({
   storage: new ExpoSecureStore(),
   jwk,

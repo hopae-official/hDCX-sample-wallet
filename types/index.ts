@@ -1,3 +1,4 @@
+import { rawDCQL } from "@vdcs/dcql";
 import { Format } from "@vdcs/oid4vci";
 
 export type CredentialOffer = {
@@ -50,4 +51,15 @@ export type StoredCredential = {
   iss: string;
   vct: string;
   [key: string]: unknown;
+};
+
+// @Todo: export this type from hDCX-js
+export type RequestObject = {
+  response_type: string;
+  client_id: string;
+  response_uri: string;
+  response_mode: "direct_post" | "direct_post.jwt";
+  nonce: string;
+  dcql_query: rawDCQL;
+  state?: string;
 };

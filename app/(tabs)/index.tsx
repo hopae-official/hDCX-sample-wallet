@@ -17,6 +17,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "@/components/ui/button";
 import { Claim } from "@/types";
 import { useWallet } from "@/contexts/WalletContext";
+import logger from "../utils/logger";
 
 export default function HomeScreen() {
   const walletSDK = useWallet();
@@ -25,11 +26,15 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       (async function loadCredentials() {
-        const storedCredentials = JSON.parse(
-          await walletSDK.credentialStore.listCredentials()
-        );
+        try {
+          const storedCredentials = JSON.parse(
+            await walletSDK.selectCredentials()
+          );
 
-        setCredentials(storedCredentials);
+          setCredentials(storedCredentials);
+        } catch (e) {
+          logger.error(e);
+        }
       })();
     }, [])
   );

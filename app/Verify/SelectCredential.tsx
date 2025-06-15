@@ -17,7 +17,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Ionicons } from "@expo/vector-icons";
-import { StoredCredential } from "@/types";
+import { RequestObject, StoredCredential } from "@/types";
 import { Button } from "@/components/ui/button";
 import Carousel, {
   ICarouselInstance,
@@ -25,8 +25,6 @@ import Carousel, {
 } from "react-native-reanimated-carousel";
 import { useSharedValue } from "react-native-reanimated";
 import { Colors } from "@/constants/Colors";
-import axios from "axios";
-import { decodeJWT } from "@vdcs/jwt";
 import { useWallet } from "@/contexts/WalletContext";
 
 const requiredClaims = ["iss", "vct"];
@@ -35,13 +33,21 @@ const requiredClaims = ["iss", "vct"];
 const presentationFrame = {
   family_name: true,
   given_name: true,
+  birth_date: true,
+  age_over_18: true,
+  issuance_date: true,
+  expiry_date: true,
+  issuing_country: true,
+  issuing_authority: true,
 };
 
 export default function SelectCredentialScreen() {
   const walletSDK = useWallet();
   const [credentials, setCredentials] = useState<StoredCredential[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [requestObject, setRequestObject] = useState<any>({});
+  const [requestObject, setRequestObject] = useState<
+    RequestObject | undefined
+  >();
 
   const selectedCredential = credentials[currentIndex];
 
@@ -52,50 +58,36 @@ export default function SelectCredentialScreen() {
     if (!requestUri) return;
 
     (async function requestAuthorization() {
-      const res = await axios.get(requestUri);
-      console.log("Verify request:", res.data);
+      const requestObject = await walletSDK.load(requestUri);
 
-      const requestObject = res.data;
+      if (!requestObject) {
+        Alert.alert("Error", "Failed to load request object");
+        router.push({ pathname: "/" });
+        return;
+      }
 
-      const parsedRequestObject = decodeJWT(requestObject);
-
-      setRequestObject(parsedRequestObject);
-
-      console.log("Parsed request object:", parsedRequestObject);
+      setRequestObject(requestObject);
     })();
   }, [requestUri]);
 
   const claims = selectedCredential;
 
-  const handlePressAccept = async () => {
+  const handlePressSubmit = async () => {
     const rawCredential = selectedCredential.raw;
 
-    if (!walletSDK || !rawCredential) return;
-
-    const vp = await walletSDK.present(rawCredential, presentationFrame);
-
-    if (!vp) return;
+    if (!walletSDK || !rawCredential || !requestObject) return;
 
     try {
-      // @Todo: Replace mock key to sync with dcql query id
-      const res = await axios.post(
-        requestObject.payload.response_uri,
-        {
-          vp_token: { 0: vp },
-          state: requestObject.payload.state,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+      const result = await walletSDK.present(
+        rawCredential,
+        presentationFrame,
+        requestObject
       );
 
-      router.replace({
-        pathname: "/Verify/VerifyResult",
-      });
+      if (!!result) {
+        router.push({ pathname: "/Verify/VerifyResult" });
+      }
     } catch (e) {
-      console.log("Error:", e);
       const errorMessage =
         e instanceof Error ? e.message : "Failed to verify credential";
       Alert.alert("Error", errorMessage);
@@ -138,13 +130,18 @@ export default function SelectCredentialScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      (async function loadCredentials() {
-        const storedCredentials =
-          await walletSDK.credentialStore.listCredentials();
+      (async function selectCredentials() {
+        try {
+          const storedCredentials = await walletSDK.selectCredentials();
 
-        setCredentials(storedCredentials ? JSON.parse(storedCredentials) : []);
+          setCredentials(
+            storedCredentials ? JSON.parse(storedCredentials) : []
+          );
+        } catch (e) {
+          console.error("Failed to load credentials", e);
+        }
       })();
-    }, [])
+    }, [requestObject])
   );
 
   if (!claims) return <Text>No claims</Text>;
@@ -300,7 +297,7 @@ export default function SelectCredentialScreen() {
           <Button
             variant={"default"}
             style={styles.acceptButton}
-            onPress={handlePressAccept}
+            onPress={handlePressSubmit}
           >
             <Text style={styles.acceptButtonText}>Submit</Text>
           </Button>

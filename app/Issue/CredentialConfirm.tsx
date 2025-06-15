@@ -12,7 +12,6 @@ import { Colors } from "@/constants/Colors";
 import { Button } from "@/components/ui/button";
 import { getCredentialClaims } from "@/utils";
 import { useWallet } from "@/contexts/WalletContext";
-import { WalletSDK } from "dvlprsh-wallet-core-test";
 
 const jwk = {
   kty: "EC",
@@ -35,7 +34,7 @@ export default function CredentialConfirmScreen() {
     : null;
 
   const handlePressAccept = async () => {
-    await walletSDK.credentialStore.saveCredential({
+    await walletSDK.save({
       credential,
       format: "dc+sd-jwt",
     });

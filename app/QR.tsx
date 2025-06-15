@@ -6,13 +6,14 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from "react-native";
 
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useCallback, useEffect, useState } from "react";
 import { Dimensions } from "react-native";
-import { useVerifyMetadataMutation } from "@/queries";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import logger from "./utils/logger";
 
 const SCAN_AREA_SIZE = { width: 250, height: 250 };
 
@@ -87,7 +88,7 @@ export default function QRScanScreen() {
 
       const uri = event.data;
 
-      console.log("Scanned URI:", uri);
+      logger.log("Scanned URI:", uri);
       const verifyRegex = /request_uri=([^&]*)/;
       const verifyMatch = uri.match(verifyRegex);
 
@@ -97,8 +98,7 @@ export default function QRScanScreen() {
       //@Todo: check server uri
       if (verifyMatch && verifyMatch[1]) {
         const decodedUri = decodeURIComponent(verifyMatch[1]);
-        console.log("추출한 디코딩된 URI22222 verify:", decodedUri);
-        setVerifyRequestUri(decodedUri);
+        setVerifyRequestUri(uri);
         return;
       }
 
@@ -107,7 +107,8 @@ export default function QRScanScreen() {
         return;
       }
 
-      console.error("credential_offer_uri를 찾을 수 없습니다.");
+      Alert.alert("Credential offer URI not found");
+      setScanned(false);
     },
     [scanned]
   );

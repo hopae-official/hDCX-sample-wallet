@@ -41,6 +41,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.67.3
         version: 5.80.7(react@19.0.0)
+      '@vdcs/dcql':
+        specifier: ^0.1.8
+        version: 0.1.8
       '@vdcs/jwt':
         specifier: ^0.1.4
         version: 0.1.4
@@ -60,8 +63,8 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       dvlprsh-wallet-core-test:
-        specifier: ^0.1.9
-        version: 0.1.9(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+        specifier: ^0.1.13
+        version: 0.1.13(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       expo:
         specifier: ~53.0.0
         version: 53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -1217,6 +1220,10 @@ packages:
       react-native-web:
         optional: true
 
+  '@sd-jwt/core@0.10.0':
+    resolution: {integrity: sha512-EuFsIHP76fwNi97dGcz2jdEenHL/AkDGcqrEA00k82Uw0HP/hvbAfB+yyPxYrd3dVaxe5PWSKvDkgDK6kKk+6Q==}
+    engines: {node: '>=18'}
+
   '@sd-jwt/decode@0.10.0':
     resolution: {integrity: sha512-djNWMWpF1kUVh1fM/lRrmoQtTaJy8J0mS0bu96XPL5Jea5ov4klxOtSvuYmPFFcqLpxyrLOIwcbqmVQ20Mdzpg==}
     engines: {node: '>=18'}
@@ -1396,20 +1403,36 @@ packages:
     peerDependencies:
       '@urql/core': ^5.0.0
 
-  '@vdcs/dcql@0.1.4':
-    resolution: {integrity: sha512-D96bR7ArNRtuBT1jwlzNAsj8+QIvUfOzWB5eztYXrgC4UW1V5Hry2thw53X/eMRo8TJcz3e3LKG1Oujcdbd5iw==}
+  '@vdcs/dcql@0.1.8':
+    resolution: {integrity: sha512-x2cTXFc0t61oC3V9BxYFYcSXJh/EwyiOMO4ycsp925MkAEoYph/4FvavqXoTc+l/JZWRsXP+B43siwk6QKQ57Q==}
     engines: {node: '>=16'}
 
   '@vdcs/jwt@0.1.4':
     resolution: {integrity: sha512-xRzTturDU6Aj7isotiBuuGwoubsXkJ3ouorU+h7cCWwTpEjymZR9cH1xQbSpTvaZ7UuYJCKLZ+aTwvcDjy6G3Q==}
     engines: {node: '>=16'}
 
+  '@vdcs/jwt@0.1.8':
+    resolution: {integrity: sha512-Ewwxz+Zc4Wy+rOf92hZW7pa5YPomY8waX+MMZwq1fpmFHf8Z/jrzNLDhzHGP+ZtQZ+V74yo+VnFkAGgGuC96Kg==}
+    engines: {node: '>=16'}
+
   '@vdcs/oid4vci-client@0.1.4':
     resolution: {integrity: sha512-zvMffmETeLawNZGyOarahtT2lMY6jlOH3397VcRR1dyZBWCfD622yuvAXedG4IG2mi/NeGVw0XBf/41Yv5J1qw==}
     engines: {node: '>=16'}
 
+  '@vdcs/oid4vci-client@0.1.8':
+    resolution: {integrity: sha512-NZ1V5zBcDy0YUryyhORuItIyPljIIWNVtGixnSNES0GOZMZ2+Rnj/D+bb3q5aw0fhQ8+DkKdEbpnOyeIPmdDww==}
+    engines: {node: '>=16'}
+
   '@vdcs/oid4vci@0.1.4':
     resolution: {integrity: sha512-Y/cWIuFtlsX2wCDadZI7/syNeREh51Vsr1NcMB97Y7uXgthB2AuG3o2ppQZ75eChKBUfo+HZ1YGe84reGYg1vw==}
+    engines: {node: '>=16'}
+
+  '@vdcs/oid4vci@0.1.8':
+    resolution: {integrity: sha512-Nr1RAr7DVK5D3eSNjWbrRRPXQ9JRF2ovoRRwAGULyp6us1N03l2qgxnf78WALdMkphmyeZyjH1d1EU5s6L4Yzw==}
+    engines: {node: '>=16'}
+
+  '@vdcs/oid4vp-client@0.1.8':
+    resolution: {integrity: sha512-Hu48C6ZoHNukZfKDnOtEkr7abrp+Y59TDQdntmTGPIcQBMPNGRTvLqI8zbWLSkIDdVtKvukoZEtZ72znvpOblQ==}
     engines: {node: '>=16'}
 
   '@webassemblyjs/ast@1.14.1':
@@ -2054,8 +2077,8 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
-  dvlprsh-wallet-core-test@0.1.9:
-    resolution: {integrity: sha512-kv5L4qligEl1ZTsHKASofhEBLgAW1Sqe0GFXEKn5IEumU/jbOoOpnWTG7iN10lojsxfc8ogdYX6Jsb32iJbH4w==}
+  dvlprsh-wallet-core-test@0.1.13:
+    resolution: {integrity: sha512-fRa65JavmN7gZr2Xduei6rZJFvt0RSpinXX/Lu4LWl4n1ne9CWTA6DIty6Crob68OJieZ03jLTUuyXI2pqDAKA==}
     engines: {node: '>=18'}
 
   eastasianwidth@0.2.0:
@@ -6018,6 +6041,13 @@ snapshots:
       react-native: 0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)
       react-native-web: 0.20.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
 
+  '@sd-jwt/core@0.10.0':
+    dependencies:
+      '@sd-jwt/decode': 0.10.0
+      '@sd-jwt/present': 0.10.0
+      '@sd-jwt/types': 0.10.0
+      '@sd-jwt/utils': 0.10.0
+
   '@sd-jwt/decode@0.10.0':
     dependencies:
       '@sd-jwt/types': 0.10.0
@@ -6240,9 +6270,16 @@ snapshots:
       '@urql/core': 5.1.1
       wonka: 6.3.5
 
-  '@vdcs/dcql@0.1.4': {}
+  '@vdcs/dcql@0.1.8': {}
 
   '@vdcs/jwt@0.1.4':
+    dependencies:
+      '@noble/curves': 1.9.2
+      '@sd-jwt/hash': 0.10.0
+      '@sd-jwt/utils': 0.10.0
+      js-base64: 3.7.7
+
+  '@vdcs/jwt@0.1.8':
     dependencies:
       '@noble/curves': 1.9.2
       '@sd-jwt/hash': 0.10.0
@@ -6257,7 +6294,25 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  '@vdcs/oid4vci-client@0.1.8':
+    dependencies:
+      '@vdcs/jwt': 0.1.8
+      '@vdcs/oid4vci': 0.1.8
+      axios: 1.9.0
+    transitivePeerDependencies:
+      - debug
+
   '@vdcs/oid4vci@0.1.4': {}
+
+  '@vdcs/oid4vci@0.1.8': {}
+
+  '@vdcs/oid4vp-client@0.1.8':
+    dependencies:
+      '@vdcs/dcql': 0.1.8
+      '@vdcs/jwt': 0.1.8
+      axios: 1.9.0
+    transitivePeerDependencies:
+      - debug
 
   '@webassemblyjs/ast@1.14.1':
     dependencies:
@@ -6950,19 +7005,21 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  dvlprsh-wallet-core-test@0.1.9(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
+  dvlprsh-wallet-core-test@0.1.13(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)):
     dependencies:
       '@noble/curves': 1.9.2
       '@noble/hashes': 1.8.0
+      '@sd-jwt/core': 0.10.0
       '@sd-jwt/decode': 0.10.0
       '@sd-jwt/hash': 0.10.0
       '@sd-jwt/present': 0.10.0
       '@sd-jwt/types': 0.10.0
       '@sd-jwt/utils': 0.10.0
-      '@vdcs/dcql': 0.1.4
-      '@vdcs/jwt': 0.1.4
-      '@vdcs/oid4vci': 0.1.4
-      '@vdcs/oid4vci-client': 0.1.4
+      '@vdcs/dcql': 0.1.8
+      '@vdcs/jwt': 0.1.8
+      '@vdcs/oid4vci': 0.1.8
+      '@vdcs/oid4vci-client': 0.1.8
+      '@vdcs/oid4vp-client': 0.1.8
       expo-crypto: 14.1.5(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       expo-secure-store: 14.2.3(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       uuid: 11.1.0
