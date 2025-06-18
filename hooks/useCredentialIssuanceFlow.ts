@@ -25,6 +25,7 @@ export const useCredentialIssuanceFlow = (credentialOfferUri?: string) => {
     async (credentialOfferUri: string) => {
       try {
         setIsLoading(true);
+
         const { credential } = (await walletSDK.receive(
           credentialOfferUri
         )) as unknown as AnimoCredentialResponse;
@@ -55,8 +56,9 @@ export const useCredentialIssuanceFlow = (credentialOfferUri?: string) => {
   const saveCredential = useCallback(async () => {
     if (!credential) return;
 
-    setIsLoading(true);
     try {
+      setIsLoading(true);
+
       await walletSDK.save({
         credential,
         format: "dc+sd-jwt",

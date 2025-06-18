@@ -10,8 +10,6 @@ export default function CredentialDetailScreen() {
     credential: string;
   }>();
 
-  console.log("params.credential", params.credential);
-
   const claims = JSON.parse(params.credential);
 
   return (

@@ -1,15 +1,12 @@
 import {
-  ImageBackground,
   StyleSheet,
   Text,
-  TouchableHighlight,
   TouchableOpacity,
   View,
 } from "react-native";
 
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Card } from "@/components/ui/card";
 
 import { useState, useCallback } from "react";
 import { Colors } from "@/constants/Colors";
@@ -18,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Claim } from "@/types";
 import { useWallet } from "@/contexts/WalletContext";
 import logger from "../../utils/logger";
+import { CredentialCard } from "@/components/CredentialCard";
 
 export default function HomeScreen() {
   const walletSDK = useWallet();
@@ -40,7 +38,6 @@ export default function HomeScreen() {
   );
 
   const handlePressCredential = (credential: Record<string, unknown>) => {
-    console.log("credential", credential);
     router.navigate({
       pathname: "/Issue/CredentialDetail",
       params: { credential: JSON.stringify(credential) },
@@ -66,32 +63,15 @@ export default function HomeScreen() {
 
           <View style={styles.stackContainer}>
             {credentials.map((credential, index) => (
-              <TouchableHighlight
+              <CredentialCard
                 key={index}
-                underlayColor={"transparent"}
-                style={[
-                  styles.cardWrapper,
-                  {
-                    top: index * CARD_OFFSET,
-                    zIndex: credentials.length + index,
-                  },
-                ]}
+                issuer={credential.iss}
+                width={CARD_WIDTH}
+                height={CARD_HEIGHT}
+                top={index * CARD_OFFSET}
+                zIndex={credentials.length + index}
                 onPress={() => handlePressCredential(credential)}
-              >
-                <Card style={styles.credentialCard}>
-                  <ImageBackground
-                    source={require("@/assets/images/card_bg.jpg")}
-                    style={styles.contentContainer}
-                  >
-                    <View style={styles.cardContent}>
-                      <View style={styles.circleImage}>
-                        <Ionicons size={28} name="wallet-outline" />
-                      </View>
-                      <Text style={styles.cardText}>{credential.iss}</Text>
-                    </View>
-                  </ImageBackground>
-                </Card>
-              </TouchableHighlight>
+              />
             ))}
           </View>
         </View>
@@ -160,17 +140,6 @@ const styles = StyleSheet.create({
     position: "relative",
     marginTop: 100,
   },
-  cardWrapper: {
-    position: "absolute",
-    width: "100%",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
   listContainer: {
     flex: 1,
     alignItems: "center",
@@ -180,43 +149,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-  },
-  credentialCard: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    backgroundColor: "gray",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "black",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    overflow: "hidden",
-  },
-  contentContainer: {
-    flexDirection: "row",
-    flex: 1,
-    width: "100%",
-  },
-  cardContent: {
-    padding: 10,
-    flex: 1,
-  },
-  cardText: {
-    color: "white",
-    fontSize: 15,
-    position: "absolute",
-    top: 10,
-    right: 10,
-  },
-  circleImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "lightgray",
-    backgroundColor: "white",
   },
 });

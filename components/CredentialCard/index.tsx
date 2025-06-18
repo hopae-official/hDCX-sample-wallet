@@ -1,25 +1,55 @@
-import { View, Text, ImageBackground, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  ImageBackground,
+  StyleSheet,
+  TouchableHighlight,
+} from "react-native";
 import { Card } from "@/components/ui/card";
 import { CircleIcon } from "../CircleIcon";
 
 type CredentialCardProps = {
   issuer: string;
+  width?: number;
+  height?: number;
+  top?: number;
+  zIndex?: number;
+  onPress?: () => void;
 };
 
-export const CredentialCard = ({ issuer }: CredentialCardProps) => (
-  <View style={styles.credentialCardWrapper}>
-    <Card style={styles.credentialCard}>
-      <ImageBackground
-        source={require("@/assets/images/card_bg.jpg")}
-        style={styles.contentContainer}
-      >
-        <View style={styles.cardContent}>
-          <CircleIcon name="wallet-outline" size={24} />
-          <Text style={styles.cardText}>{issuer}</Text>
-        </View>
-      </ImageBackground>
-    </Card>
-  </View>
+export const CredentialCard = ({
+  issuer,
+  width = 300,
+  height = 200,
+  top,
+  zIndex,
+  onPress,
+}: CredentialCardProps) => (
+  <TouchableHighlight
+    underlayColor={"transparent"}
+    style={[
+      styles.cardWrapper,
+      {
+        top,
+        zIndex,
+      },
+    ]}
+    onPress={onPress}
+  >
+    <View style={styles.credentialCardWrapper}>
+      <Card style={[styles.credentialCard, { width, height }]}>
+        <ImageBackground
+          source={require("@/assets/images/card_bg.jpg")}
+          style={styles.contentContainer}
+        >
+          <View style={styles.cardContent}>
+            <CircleIcon name="wallet-outline" size={24} />
+            <Text style={styles.cardText}>{issuer}</Text>
+          </View>
+        </ImageBackground>
+      </Card>
+    </View>
+  </TouchableHighlight>
 );
 
 const styles = StyleSheet.create({
@@ -28,8 +58,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   credentialCard: {
-    width: 300,
-    height: 200,
     backgroundColor: "white",
     borderRadius: 10,
     justifyContent: "center",
@@ -52,9 +80,20 @@ const styles = StyleSheet.create({
   },
   cardText: {
     color: "white",
-    fontSize: 18,
+    fontSize: 15,
     position: "absolute",
-    bottom: 10,
+    top: 10,
     right: 10,
+  },
+  cardWrapper: {
+    position: "absolute",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });
