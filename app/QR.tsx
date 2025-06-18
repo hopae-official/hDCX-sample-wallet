@@ -10,7 +10,7 @@ export default function QRScanScreen() {
 
     if (result.type === "verify") {
       router.navigate({
-        pathname: "/Verify/SelectCredential",
+        pathname: "/Verify/CredentialPresentation",
         params: { requestUri: result.uri },
       });
       return;

@@ -19,7 +19,7 @@ import { FullscreenLoader } from "@/components/FullscreenLoader";
 import { ClaimSelector } from "@/components/ClaimSelector";
 import { useClaimSelector } from "@/hooks/useClaimSelector";
 
-export default function SelectCredentialScreen() {
+export default function CredentialPresentationScreen() {
   const { requestUri } = useLocalSearchParams<{ requestUri: string }>();
 
   const {
