@@ -115,7 +115,7 @@ export default function HomeScreen() {
             variant="default"
             className="w-full shadow shadow-foreground/5 mt-5"
             style={{ width: "100%", backgroundColor: Colors.light.orange }}
-            onPress={() => router.navigate("/Issue/CredentialTypeSelection")}
+            onPress={() => router.navigate("/QR")}
           >
             <Text style={{ color: "white" }}>Add a credential</Text>
           </Button>
