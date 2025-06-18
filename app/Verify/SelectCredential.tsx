@@ -1,47 +1,30 @@
-import {
-  router,
-  Stack,
-  useFocusEffect,
-  useLocalSearchParams,
-} from "expo-router";
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useCallback, useEffect, useState } from "react";
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Ionicons } from "@expo/vector-icons";
-import { RequestObject, StoredCredential } from "@/types";
 import { Button } from "@/components/ui/button";
 import Carousel, { Pagination } from "react-native-reanimated-carousel";
 import { Colors } from "@/constants/Colors";
-import { useWallet } from "@/contexts/WalletContext";
 import { InfoItem } from "@/components/InfoItem";
 import { CircleIcon } from "@/components/CircleIcon";
 import { CredentialCard } from "@/components/CredentialCard";
 import { ProviderInfo } from "@/components/ProviderInfo";
 import { useCredentialCarousel } from "@/hooks/useCredentialCarousel";
-
-// Constants
-const REQUIRED_CLAIMS = ["iss", "vct"] as const;
-const PRESENTATION_FRAME = {
-  family_name: true,
-  given_name: true,
-  birth_date: true,
-  age_over_18: true,
-  issuance_date: true,
-  expiry_date: true,
-  issuing_country: true,
-  issuing_authority: true,
-} as const;
+import { useVerificationFlow } from "@/hooks/useCredentialVerification";
+import { FullscreenLoader } from "@/components/FullscreenLoader";
 
 export default function SelectCredentialScreen() {
-  const walletSDK = useWallet();
-  const [requestObject, setRequestObject] = useState<RequestObject>();
+  const { requestUri } = useLocalSearchParams<{ requestUri: string }>();
+
+  const {
+    isLoading: isVerificationLoading,
+    loadRequestObject,
+    loadCredentials,
+    presentCredential,
+    REQUIRED_CLAIMS,
+  } = useVerificationFlow(requestUri);
+
   const {
     credentials,
     setCredentials,
@@ -52,74 +35,38 @@ export default function SelectCredentialScreen() {
     onPressPagination,
   } = useCredentialCarousel();
 
-  const claims = selectedCredential;
-
-  const params = useLocalSearchParams<{ requestUri: string }>();
-  const { requestUri } = params;
+  const isLoading = !selectedCredential;
 
   const [selectedOptions, setSelectedOptions] = useState({
-    ...claims,
+    ...selectedCredential,
     iss: true,
     vct: true,
   });
 
-  // Load request object
   useEffect(() => {
-    if (!requestUri) return;
+    (async function load() {
+      const result = await loadRequestObject();
 
-    const loadRequestObject = async () => {
-      try {
-        const reqObject = await walletSDK.load(requestUri);
-        if (!reqObject) throw new Error("Failed to load request object");
-        setRequestObject(reqObject);
-      } catch (error) {
-        Alert.alert("Error", "Failed to load request object");
+      if (!result.isSuccess) {
         router.push({ pathname: "/" });
       }
-    };
+    })();
+  }, [loadRequestObject]);
 
-    loadRequestObject();
-  }, [requestUri]);
-
-  // Load credentials
-  useFocusEffect(
-    useCallback(() => {
-      const loadCredentials = async () => {
-        try {
-          if (!requestObject) return;
-          const storedCredentials = await walletSDK
-            .selectCredentials
-            //requestObject.dcql_query
-            ();
-          setCredentials(
-            storedCredentials ? JSON.parse(storedCredentials) : []
-          );
-        } catch (error) {
-          console.error("Failed to load credentials", error);
-        }
-      };
-
-      loadCredentials();
-    }, [requestObject])
-  );
+  useEffect(() => {
+    (async function fetchCredentials() {
+      const creds = await loadCredentials();
+      setCredentials(creds);
+    })();
+  }, [loadCredentials]);
 
   const handlePressSubmit = async () => {
-    if (!walletSDK || !selectedCredential?.raw || !requestObject) return;
+    if (isVerificationLoading) return;
 
-    try {
-      const result = await walletSDK.present(
-        selectedCredential.raw,
-        PRESENTATION_FRAME,
-        requestObject
-      );
+    if (selectedCredential) {
+      await presentCredential(selectedCredential);
 
-      if (result) {
-        router.push({ pathname: "/Verify/VerifyResult" });
-      }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to verify credential";
-      Alert.alert("Error", errorMessage);
+      router.push({ pathname: "/Verify/VerifyResult" });
     }
   };
 
@@ -136,8 +83,6 @@ export default function SelectCredentialScreen() {
     }));
   };
 
-  if (!claims) return <Text>No claims</Text>;
-
   return (
     <>
       <Stack.Screen
@@ -148,95 +93,107 @@ export default function SelectCredentialScreen() {
               <Ionicons name="chevron-back" size={27} color="#000" />
             </TouchableOpacity>
           ),
+          headerShown: !isLoading,
         }}
       />
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollViewContent}
-        bounces={false}
-      >
-        <Text style={styles.title}>
-          An organization is asking for information
-        </Text>
+      <FullscreenLoader isLoading={isLoading}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollViewContent}
+          bounces={false}
+        >
+          <Text style={styles.title}>
+            An organization is asking for information
+          </Text>
 
-        <View style={styles.carouselContainer}>
-          <Carousel
-            ref={carouselRef}
-            style={styles.carousel}
-            width={310}
-            height={300}
-            data={credentials}
-            loop={false}
-            onProgressChange={progress}
-            onScrollEnd={setCurrentIndex}
-            snapEnabled={true}
-            renderItem={({ item }) => <CredentialCard issuer={item.iss} />}
-          />
-          <Pagination.Basic
-            progress={progress}
-            data={credentials}
-            dotStyle={{ backgroundColor: "rgba(0,0,0,0.2)", borderRadius: 50 }}
-            containerStyle={{ gap: 5, marginTop: 10 }}
-            onPress={onPressPagination}
-          />
-        </View>
+          <View style={styles.carouselContainer}>
+            <Carousel
+              ref={carouselRef}
+              style={styles.carousel}
+              width={310}
+              height={300}
+              data={credentials ?? []}
+              loop={false}
+              onProgressChange={progress}
+              onScrollEnd={setCurrentIndex}
+              snapEnabled={true}
+              renderItem={({ item }) => <CredentialCard issuer={item.iss} />}
+            />
+            <Pagination.Basic
+              progress={progress}
+              data={credentials ?? []}
+              dotStyle={{
+                backgroundColor: "rgba(0,0,0,0.2)",
+                borderRadius: 50,
+              }}
+              containerStyle={{ gap: 5, marginTop: 10 }}
+              onPress={onPressPagination}
+            />
+          </View>
 
-        <ProviderInfo issuer={claims.iss} />
+          <ProviderInfo issuer={selectedCredential?.iss ?? ""} />
 
-        <View style={styles.dataInfoContainer}>
-          <Card style={styles.dataInfoCard}>
-            <View style={styles.cardHeader}>
-              <CircleIcon name="newspaper" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.boldText}>Information</Text>
+          <View style={styles.dataInfoContainer}>
+            <Card style={styles.dataInfoCard}>
+              <View style={styles.cardHeader}>
+                <CircleIcon name="newspaper" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.boldText}>Information</Text>
+                </View>
               </View>
-            </View>
 
-            <Card style={styles.infoWrapper}>
-              {Object.entries(claims)
-                .filter(([key, value]) => {
-                  if (typeof value !== "string" && typeof value !== "number")
-                    return false;
-                  if (key === "raw") return false;
-                  return !(
-                    typeof value === "string" && value.startsWith("data:image")
-                  );
-                })
-                .map(([key, value]) => (
-                  <InfoItem
-                    key={key}
-                    label={key}
-                    value={value as string | number}
-                    isRequired={REQUIRED_CLAIMS.includes(key as any)}
-                    isSelected={
-                      !!selectedOptions[key as keyof typeof selectedOptions]
-                    }
-                    onToggle={() =>
-                      toggleOption(key as keyof typeof selectedOptions)
-                    }
-                  />
-                ))}
+              {selectedCredential && (
+                <Card style={styles.infoWrapper}>
+                  {Object.entries(selectedCredential)
+                    .filter(([key, value]) => {
+                      if (
+                        typeof value !== "string" &&
+                        typeof value !== "number"
+                      )
+                        return false;
+                      if (key === "raw") return false;
+                      return !(
+                        typeof value === "string" &&
+                        value.startsWith("data:image")
+                      );
+                    })
+                    .map(([key, value]) => (
+                      <InfoItem
+                        key={key}
+                        label={key}
+                        value={value as string | number}
+                        isRequired={REQUIRED_CLAIMS.includes(key as any)}
+                        isSelected={
+                          !!selectedOptions[key as keyof typeof selectedOptions]
+                        }
+                        onToggle={() =>
+                          toggleOption(key as keyof typeof selectedOptions)
+                        }
+                      />
+                    ))}
+                </Card>
+              )}
             </Card>
-          </Card>
-        </View>
+          </View>
 
-        <View style={styles.buttonWrapper}>
-          <Button
-            variant="default"
-            style={styles.acceptButton}
-            onPress={handlePressSubmit}
-          >
-            <Text style={styles.acceptButtonText}>Submit</Text>
-          </Button>
-          <Button
-            variant="default"
-            style={styles.denyButton}
-            onPress={handlePressDeny}
-          >
-            <Text>Cancel</Text>
-          </Button>
-        </View>
-      </ScrollView>
+          <View style={styles.buttonWrapper}>
+            <Button
+              variant="default"
+              style={styles.acceptButton}
+              onPress={handlePressSubmit}
+            >
+              <Text style={styles.acceptButtonText}>Submit</Text>
+            </Button>
+            <Button
+              variant="default"
+              style={styles.denyButton}
+              onPress={handlePressDeny}
+            >
+              <Text>Cancel</Text>
+            </Button>
+          </View>
+        </ScrollView>
+      </FullscreenLoader>
     </>
   );
 }
@@ -314,5 +271,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "gray",
     backgroundColor: "white",
+  },
+  loadingSpinner: {
+    flex: 1,
   },
 });
