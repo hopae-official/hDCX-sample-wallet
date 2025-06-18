@@ -5,7 +5,6 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Card } from "@/components/ui/card";
@@ -14,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useCredentialIssuanceFlow } from "@/hooks/useCredentialIssuanceFlow";
 import { useEffect } from "react";
 import { FullscreenLoader } from "@/components/FullscreenLoader";
+import { CredentialInfo } from "@/components/CredentialInfo";
 
 export default function CredentialIssuanceScreen() {
   const { credentialOfferUri } = useLocalSearchParams<{
@@ -40,6 +40,7 @@ export default function CredentialIssuanceScreen() {
 
     router.replace("/");
   };
+
   const handleDeny = () => {
     router.replace("/");
   };
@@ -83,34 +84,7 @@ export default function CredentialIssuanceScreen() {
                 <Ionicons name="chevron-down" size={24} />
               </Card>
               <View style={styles.dataInfoContainer}>
-                <Card style={styles.dataInfoCard}>
-                  <View style={styles.cardHeader}>
-                    <View style={styles.circleImage}>
-                      <Ionicons name="newspaper" size={24} color="gray" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.boldText}>
-                        Personal Identification Data
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Card style={styles.infoWrapper}>
-                    {Object.entries(claims)
-                      .filter(([_, value]) => {
-                        if (typeof value !== "string") return false;
-                        return !value.startsWith("data:image");
-                      })
-                      .map(([key, value]) => (
-                        <View key={key}>
-                          <Text style={styles.infoLabelText}>
-                            {key.replace(/_/g, " ").toUpperCase()}
-                          </Text>
-                          <Text style={styles.infoText}>{value}</Text>
-                        </View>
-                      ))}
-                  </Card>
-                </Card>
+                <CredentialInfo claims={claims} title={""} />
               </View>
               <View style={styles.buttonWrapper}>
                 <Button
@@ -188,6 +162,8 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     flex: 1,
+    padding: 10,
+    marginTop: 10,
   },
   dataInfoCard: {
     marginTop: 10,

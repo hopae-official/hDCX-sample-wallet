@@ -40,6 +40,7 @@ export default function HomeScreen() {
   );
 
   const handlePressCredential = (credential: Record<string, unknown>) => {
+    console.log("credential", credential);
     router.navigate({
       pathname: "/Issue/CredentialDetail",
       params: { credential: JSON.stringify(credential) },
@@ -48,7 +49,7 @@ export default function HomeScreen() {
 
   const handlePressAddCredential = () => {
     router.navigate({
-      pathname: "/Issue/CredentialTypeSelection",
+      pathname: "/QR",
     });
   };
 
