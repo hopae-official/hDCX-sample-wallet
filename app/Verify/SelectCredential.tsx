@@ -6,14 +6,12 @@ import {
 } from "expo-router";
 import {
   Alert,
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,11 +24,14 @@ import Carousel, {
 import { useSharedValue } from "react-native-reanimated";
 import { Colors } from "@/constants/Colors";
 import { useWallet } from "@/contexts/WalletContext";
+import { InfoItem } from "@/components/InfoItem";
+import { CircleIcon } from "@/components/CircleIcon";
+import { CredentialCard } from "@/components/CredentialCard";
+import { ProviderInfo } from "@/components/ProviderInfo";
 
-const requiredClaims = ["iss", "vct"];
-
-// @Todo: fix presentationFrame matching dcql
-const presentationFrame = {
+// Constants
+const REQUIRED_CLAIMS = ["iss", "vct"] as const;
+const PRESENTATION_FRAME = {
   family_name: true,
   given_name: true,
   birth_date: true,
@@ -39,57 +40,84 @@ const presentationFrame = {
   expiry_date: true,
   issuing_country: true,
   issuing_authority: true,
-};
+} as const;
 
 export default function SelectCredentialScreen() {
   const walletSDK = useWallet();
   const [credentials, setCredentials] = useState<StoredCredential[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [requestObject, setRequestObject] = useState<
-    RequestObject | undefined
-  >();
+  const [requestObject, setRequestObject] = useState<RequestObject>();
+  const carouselRef = useRef<ICarouselInstance>(null);
+  const progress = useSharedValue<number>(0);
 
   const selectedCredential = credentials[currentIndex];
+  const claims = selectedCredential;
 
   const params = useLocalSearchParams<{ requestUri: string }>();
-  const requestUri = params.requestUri;
+  const { requestUri } = params;
 
+  const [selectedOptions, setSelectedOptions] = useState({
+    ...claims,
+    iss: true,
+    vct: true,
+  });
+
+  // Load request object
   useEffect(() => {
     if (!requestUri) return;
 
-    (async function requestAuthorization() {
-      const requestObject = await walletSDK.load(requestUri);
-
-      if (!requestObject) {
+    const loadRequestObject = async () => {
+      try {
+        const reqObject = await walletSDK.load(requestUri);
+        if (!reqObject) throw new Error("Failed to load request object");
+        setRequestObject(reqObject);
+      } catch (error) {
         Alert.alert("Error", "Failed to load request object");
         router.push({ pathname: "/" });
-        return;
       }
+    };
 
-      setRequestObject(requestObject);
-    })();
+    loadRequestObject();
   }, [requestUri]);
 
-  const claims = selectedCredential;
+  // Load credentials
+  useFocusEffect(
+    useCallback(() => {
+      const loadCredentials = async () => {
+        try {
+          if (!requestObject) return;
+          const storedCredentials = await walletSDK
+            .selectCredentials
+            //requestObject.dcql_query
+            ();
+          setCredentials(
+            storedCredentials ? JSON.parse(storedCredentials) : []
+          );
+        } catch (error) {
+          console.error("Failed to load credentials", error);
+        }
+      };
+
+      loadCredentials();
+    }, [requestObject])
+  );
 
   const handlePressSubmit = async () => {
-    const rawCredential = selectedCredential.raw;
-
-    if (!walletSDK || !rawCredential || !requestObject) return;
+    if (!walletSDK || !selectedCredential?.raw || !requestObject) return;
 
     try {
       const result = await walletSDK.present(
-        rawCredential,
-        presentationFrame,
+        selectedCredential.raw,
+        PRESENTATION_FRAME,
         requestObject
       );
 
-      if (!!result) {
+      if (result) {
         router.push({ pathname: "/Verify/VerifyResult" });
       }
-    } catch (e) {
+    } catch (error) {
       const errorMessage =
-        e instanceof Error ? e.message : "Failed to verify credential";
+        error instanceof Error ? error.message : "Failed to verify credential";
       Alert.alert("Error", errorMessage);
     }
   };
@@ -99,8 +127,15 @@ export default function SelectCredentialScreen() {
     router.push({ pathname: "/" });
   };
 
+  const toggleOption = (option: keyof typeof selectedOptions) => {
+    if (REQUIRED_CLAIMS.includes(option as any)) return;
+    setSelectedOptions((prev) => ({
+      ...prev,
+      [option]: !prev[option],
+    }));
+  };
+
   const ref = useRef<ICarouselInstance>(null);
-  const progress = useSharedValue<number>(0);
 
   const onPressPagination = (index: number) => {
     ref.current?.scrollTo({
@@ -112,41 +147,6 @@ export default function SelectCredentialScreen() {
       animated: true,
     });
   };
-
-  const [selectedOptions, setSelectedOptions] = useState({
-    ...claims,
-    iss: true, // required
-    vct: true, // required
-  });
-
-  const toggleOption = (option: keyof typeof selectedOptions) => {
-    if (requiredClaims.includes(option)) return;
-
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [option]: !prev[option],
-    }));
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      (async function selectCredentials() {
-        try {
-          if (!requestObject) return;
-
-          const storedCredentials = await walletSDK.selectCredentials(
-            requestObject.dcql_query
-          );
-
-          setCredentials(
-            storedCredentials ? JSON.parse(storedCredentials) : []
-          );
-        } catch (e) {
-          console.error("Failed to load credentials", e);
-        }
-      })();
-    }, [requestObject])
-  );
 
   if (!claims) return <Text>No claims</Text>;
 
@@ -163,7 +163,7 @@ export default function SelectCredentialScreen() {
         }}
       />
       <ScrollView
-        style={{ flex: 1 }}
+        style={styles.container}
         contentContainerStyle={styles.scrollViewContent}
         bounces={false}
       >
@@ -171,48 +171,19 @@ export default function SelectCredentialScreen() {
           An organization is asking for information
         </Text>
 
-        <View
-          style={{ width: "100%", backgroundColor: Colors.light.background }}
-        >
+        <View style={styles.carouselContainer}>
           <Carousel
-            ref={ref}
-            style={{
-              width: "100%",
-              height: 220,
-              justifyContent: "center",
-            }}
+            ref={carouselRef}
+            style={styles.carousel}
             width={310}
             height={300}
             data={credentials}
             loop={false}
             onProgressChange={progress}
-            onScrollEnd={(_index) => {
-              setCurrentIndex(_index);
-            }}
+            onScrollEnd={setCurrentIndex}
             snapEnabled={true}
-            renderItem={({ index, item }) => (
-              <View style={styles.credentialCardWrapper}>
-                <Card style={styles.credentialCard}>
-                  <ImageBackground
-                    source={require("@/assets/images/card_bg.jpg")}
-                    style={styles.contentContainer}
-                  >
-                    <View style={styles.cardContent}>
-                      <View style={styles.circleImage}>
-                        <Ionicons
-                          name="wallet-outline"
-                          size={24}
-                          color={"gray"}
-                        />
-                      </View>
-                      <Text style={styles.cardText}>{claims.iss}</Text>
-                    </View>
-                  </ImageBackground>
-                </Card>
-              </View>
-            )}
+            renderItem={({ item }) => <CredentialCard issuer={item.iss} />}
           />
-
           <Pagination.Basic
             progress={progress}
             data={credentials}
@@ -221,28 +192,13 @@ export default function SelectCredentialScreen() {
             onPress={onPressPagination}
           />
         </View>
-        <Card style={styles.providerCard}>
-          <View style={styles.circleImage}>
-            <Ionicons name="newspaper" size={15} color={"gray"} />
-          </View>
-          <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.boldText}>{claims.iss}</Text>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={20}
-              color={"green"}
-              opacity={0.5}
-            />
-          </View>
-          <Ionicons name="chevron-down" size={24} />
-        </Card>
+
+        <ProviderInfo issuer={claims.iss} />
 
         <View style={styles.dataInfoContainer}>
           <Card style={styles.dataInfoCard}>
             <View style={styles.cardHeader}>
-              <View style={styles.infoCircleImage}>
-                <Ionicons name="newspaper" size={15} color={"gray"} />
-              </View>
+              <CircleIcon name="newspaper" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.boldText}>Information</Text>
               </View>
@@ -253,45 +209,24 @@ export default function SelectCredentialScreen() {
                 .filter(([key, value]) => {
                   if (typeof value !== "string" && typeof value !== "number")
                     return false;
-
                   if (key === "raw") return false;
-
                   return !(
                     typeof value === "string" && value.startsWith("data:image")
                   );
                 })
                 .map(([key, value]) => (
-                  <View style={styles.optionWrapper} key={key}>
-                    <TouchableOpacity
-                      onPress={() =>
-                        toggleOption(key as keyof typeof selectedOptions)
-                      }
-                      disabled={requiredClaims.includes(key)}
-                    >
-                      <Ionicons
-                        name="checkbox-outline"
-                        size={20}
-                        color={
-                          requiredClaims.includes(key)
-                            ? "black"
-                            : selectedOptions[
-                                key as keyof typeof selectedOptions
-                              ]
-                            ? "green"
-                            : "lightgray"
-                        }
-                      />
-                    </TouchableOpacity>
-                    <View>
-                      <Text style={styles.infoLabelText}>
-                        {key.replace(/_/g, " ").toUpperCase()}
-                        {requiredClaims.includes(key) && " (required)"}
-                      </Text>
-                      <Text style={styles.infoText}>
-                        {(value as string | number).toString()}
-                      </Text>
-                    </View>
-                  </View>
+                  <InfoItem
+                    key={key}
+                    label={key}
+                    value={value as string | number}
+                    isRequired={REQUIRED_CLAIMS.includes(key as any)}
+                    isSelected={
+                      !!selectedOptions[key as keyof typeof selectedOptions]
+                    }
+                    onToggle={() =>
+                      toggleOption(key as keyof typeof selectedOptions)
+                    }
+                  />
                 ))}
             </Card>
           </Card>
@@ -299,14 +234,14 @@ export default function SelectCredentialScreen() {
 
         <View style={styles.buttonWrapper}>
           <Button
-            variant={"default"}
+            variant="default"
             style={styles.acceptButton}
             onPress={handlePressSubmit}
           >
             <Text style={styles.acceptButtonText}>Submit</Text>
           </Button>
           <Button
-            variant={"default"}
+            variant="default"
             style={styles.denyButton}
             onPress={handlePressDeny}
           >
@@ -319,6 +254,9 @@ export default function SelectCredentialScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   scrollViewContent: {
     flexGrow: 1,
     alignItems: "center",
@@ -334,107 +272,18 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginStart: 20,
   },
-  descWrapper: {
-    gap: 8,
-    borderColor: "black",
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 5,
-    height: 400,
+  carouselContainer: {
+    width: "100%",
+  },
+  carousel: {
+    width: "100%",
+    height: 220,
     justifyContent: "center",
-    alignItems: "center",
   },
   boldText: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#000",
-  },
-  text: {
-    fontSize: 16,
-    color: "#000",
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-  loadingSpinner: {
-    marginTop: 20,
-  },
-  credentialWrapper: {
-    backgroundColor: "white",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-    borderRadius: 20,
-    shadowColor: "black",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    gap: 8,
-    marginTop: 20,
-  },
-  credentialCardWrapper: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  credentialCard: {
-    width: 300,
-    height: 200,
-    backgroundColor: "white",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "black",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    overflow: "hidden",
-    marginTop: 10,
-  },
-  contentContainer: {
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    flex: 1,
-    width: "100%",
-  },
-  cardContent: {
-    padding: 10,
-    flex: 1,
-  },
-  cardText: {
-    color: "white",
-    fontSize: 18,
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-  },
-  circleImage: {
-    width: 35,
-    height: 35,
-    borderRadius: 35 / 2,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "lightgray",
-    backgroundColor: "white",
-    margin: 3,
-  },
-  providerCard: {
-    width: "90%",
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    marginTop: 20,
-    backgroundColor: Colors.light.background,
-    borderColor: Colors.light.border,
-  },
-  verifiedDescWapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 5,
-    gap: 3,
-  },
-  decsText: {
-    color: "green",
   },
   dataInfoContainer: {
     width: "100%",
@@ -447,7 +296,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 15,
     backgroundColor: Colors.light.lightYellow,
-    //borderColor: Colors.light.border,
     borderColor: "transparent",
   },
   cardHeader: {
@@ -462,27 +310,6 @@ const styles = StyleSheet.create({
     gap: 15,
     backgroundColor: Colors.light.background,
     borderColor: "transparent",
-  },
-  infoLabelText: {
-    fontSize: 15,
-    opacity: 0.5,
-    color: "#000",
-  },
-  infoText: {
-    fontSize: 15,
-    opacity: 0.7,
-    color: "#000",
-  },
-  infoCircleImage: {
-    width: 35,
-    height: 35,
-    borderRadius: 35 / 2,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "lightgray",
-    backgroundColor: "white",
-    marginRight: 4,
   },
   buttonWrapper: {
     marginVertical: 30,
@@ -499,10 +326,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "gray",
     backgroundColor: "white",
-  },
-  optionWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
   },
 });
