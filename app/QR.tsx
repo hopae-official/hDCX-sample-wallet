@@ -18,7 +18,7 @@ export default function QRScanScreen() {
 
     if (result.type === "issue") {
       router.replace({
-        pathname: "/Issue/CredentialOffer",
+        pathname: "/Issue/CredentialIssuance",
         params: { credentialOfferUri: result.uri },
       });
     }

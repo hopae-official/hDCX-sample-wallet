@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { ActivityIndicator, StyleSheet } from "react-native";
 
 type FullscreenLoaderProps = {
@@ -12,7 +13,7 @@ export const FullscreenLoader = ({
     return (
       <ActivityIndicator
         style={styles.loadingSpinner}
-        color={"black"}
+        color={Colors.light.orange}
         size="large"
       />
     );
