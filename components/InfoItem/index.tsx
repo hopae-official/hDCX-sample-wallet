@@ -25,7 +25,7 @@ export const InfoItem = ({
         color={isRequired ? "black" : isSelected ? "green" : "lightgray"}
       />
     </TouchableOpacity>
-    <View>
+    <View style={styles.infoRow}>
       <Text style={styles.infoLabelText}>
         {toPascalCase(label)}
         {isRequired && " (required)"}
@@ -39,7 +39,16 @@ const styles = StyleSheet.create({
   optionWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 15,
+    backgroundColor: "#faf8e3",
+    paddingHorizontal: 10,
+  },
+  infoRow: {
+    backgroundColor: "#faf8e3",
+    paddingVertical: 10,
+    
+    borderRadius: 5,
+    flex: 1,
   },
   infoLabelText: {
     fontSize: 14,

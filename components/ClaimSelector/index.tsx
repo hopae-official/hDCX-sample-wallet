@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { View, Text, StyleSheet } from "react-native";
-import { CircleIcon } from "@/components/CircleIcon";
+import { View, StyleSheet } from "react-native";
 import { InfoItem } from "@/components/InfoItem";
 import { StoredCredential } from "@/types";
 import { ClaimSelectorOptions } from "@/hooks/useClaimSelector";
@@ -29,15 +28,10 @@ export function ClaimSelector({
   };
 
   return (
-    <Card style={styles.dataInfoCard}>
-      <View style={styles.cardHeader}>
-        <CircleIcon name="newspaper" />
-        <Text style={styles.title}>Information</Text>
-      </View>
-
+    <View style={styles.dataInfoCard}>
       <Card style={styles.infoWrapper}>
         {Object.entries(credential)
-          .filter(([key, value]) => key !== "raw" && isValidClaimValue(value))
+          .filter(([key, value]) => isValidClaimValue(value) && key !== "raw")
           .map(([key, value]) => (
             <InfoItem
               key={key}
@@ -49,35 +43,22 @@ export function ClaimSelector({
             />
           ))}
       </Card>
-    </Card>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#000",
-  },
   dataInfoCard: {
     marginTop: 10,
-    width: "90%",
-    alignItems: "center",
-    padding: 15,
-    backgroundColor: Colors.light.lightYellow,
-    borderColor: "transparent",
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
     width: "100%",
+    alignItems: "center",
+    padding: 10,
   },
   infoWrapper: {
     padding: 10,
     borderRadius: 5,
     width: "100%",
-    gap: 20,
+    gap: 10,
     backgroundColor: Colors.light.background,
     borderColor: "transparent",
   },
