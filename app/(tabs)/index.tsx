@@ -17,7 +17,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "@/components/ui/button";
 import { Claim } from "@/types";
 import { useWallet } from "@/contexts/WalletContext";
-import logger from "../utils/logger";
+import logger from "../../utils/logger";
 
 export default function HomeScreen() {
   const walletSDK = useWallet();
