@@ -1,18 +1,23 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@/components/ui/button";
 import Carousel, { Pagination } from "react-native-reanimated-carousel";
 import { Colors } from "@/constants/Colors";
-import { InfoItem } from "@/components/InfoItem";
-import { CircleIcon } from "@/components/CircleIcon";
 import { CredentialCard } from "@/components/CredentialCard";
 import { ProviderInfo } from "@/components/ProviderInfo";
 import { useCredentialCarousel } from "@/hooks/useCredentialCarousel";
 import { useVerificationFlow } from "@/hooks/useCredentialVerification";
 import { FullscreenLoader } from "@/components/FullscreenLoader";
+import { ClaimSelector } from "@/components/ClaimSelector";
+import { useClaimSelector } from "@/hooks/useClaimSelector";
 
 export default function SelectCredentialScreen() {
   const { requestUri } = useLocalSearchParams<{ requestUri: string }>();
@@ -37,11 +42,10 @@ export default function SelectCredentialScreen() {
 
   const isLoading = !selectedCredential;
 
-  const [selectedOptions, setSelectedOptions] = useState({
-    ...selectedCredential,
-    iss: true,
-    vct: true,
-  });
+  const { selectedOptions, toggleOption } = useClaimSelector(
+    selectedCredential,
+    REQUIRED_CLAIMS
+  );
 
   useEffect(() => {
     (async function load() {
@@ -60,7 +64,7 @@ export default function SelectCredentialScreen() {
     })();
   }, [loadCredentials]);
 
-  const handlePressSubmit = async () => {
+  const handlePressPresent = async () => {
     if (isVerificationLoading) return;
 
     if (selectedCredential) {
@@ -73,14 +77,6 @@ export default function SelectCredentialScreen() {
   const handlePressDeny = () => {
     router.dismissAll();
     router.push({ pathname: "/" });
-  };
-
-  const toggleOption = (option: keyof typeof selectedOptions) => {
-    if (REQUIRED_CLAIMS.includes(option as any)) return;
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [option]: !prev[option],
-    }));
   };
 
   return (
@@ -134,55 +130,21 @@ export default function SelectCredentialScreen() {
           <ProviderInfo issuer={selectedCredential?.iss ?? ""} />
 
           <View style={styles.dataInfoContainer}>
-            <Card style={styles.dataInfoCard}>
-              <View style={styles.cardHeader}>
-                <CircleIcon name="newspaper" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.boldText}>Information</Text>
-                </View>
-              </View>
-
-              {selectedCredential && (
-                <Card style={styles.infoWrapper}>
-                  {Object.entries(selectedCredential)
-                    .filter(([key, value]) => {
-                      if (
-                        typeof value !== "string" &&
-                        typeof value !== "number"
-                      )
-                        return false;
-                      if (key === "raw") return false;
-                      return !(
-                        typeof value === "string" &&
-                        value.startsWith("data:image")
-                      );
-                    })
-                    .map(([key, value]) => (
-                      <InfoItem
-                        key={key}
-                        label={key}
-                        value={value as string | number}
-                        isRequired={REQUIRED_CLAIMS.includes(key as any)}
-                        isSelected={
-                          !!selectedOptions[key as keyof typeof selectedOptions]
-                        }
-                        onToggle={() =>
-                          toggleOption(key as keyof typeof selectedOptions)
-                        }
-                      />
-                    ))}
-                </Card>
-              )}
-            </Card>
+            <ClaimSelector
+              credential={selectedCredential}
+              selectedOptions={selectedOptions}
+              onToggleOption={toggleOption}
+              requiredClaims={REQUIRED_CLAIMS}
+            />
           </View>
 
           <View style={styles.buttonWrapper}>
             <Button
               variant="default"
               style={styles.acceptButton}
-              onPress={handlePressSubmit}
+              onPress={handlePressPresent}
             >
-              <Text style={styles.acceptButtonText}>Submit</Text>
+              <Text style={styles.acceptButtonText}>Present</Text>
             </Button>
             <Button
               variant="default"
@@ -225,36 +187,10 @@ const styles = StyleSheet.create({
     height: 220,
     justifyContent: "center",
   },
-  boldText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#000",
-  },
   dataInfoContainer: {
     width: "100%",
     alignItems: "center",
     flex: 1,
-  },
-  dataInfoCard: {
-    marginTop: 10,
-    width: "90%",
-    alignItems: "center",
-    padding: 15,
-    backgroundColor: Colors.light.lightYellow,
-    borderColor: "transparent",
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  infoWrapper: {
-    padding: 10,
-    borderRadius: 5,
-    width: "100%",
-    gap: 15,
-    backgroundColor: Colors.light.background,
-    borderColor: "transparent",
   },
   buttonWrapper: {
     marginVertical: 30,
@@ -271,8 +207,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "gray",
     backgroundColor: "white",
-  },
-  loadingSpinner: {
-    flex: 1,
   },
 });

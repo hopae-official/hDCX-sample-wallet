@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { toPascalCase } from "@/utils/string";
 
 type InfoItemProps = {
   label: string;
@@ -26,7 +27,7 @@ export const InfoItem = ({
     </TouchableOpacity>
     <View>
       <Text style={styles.infoLabelText}>
-        {label.replace(/_/g, " ").toUpperCase()}
+        {toPascalCase(label)}
         {isRequired && " (required)"}
       </Text>
       <Text style={styles.infoText}>{value.toString()}</Text>
@@ -41,13 +42,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   infoLabelText: {
-    fontSize: 15,
+    fontSize: 14,
     opacity: 0.5,
     color: "#000",
   },
   infoText: {
-    fontSize: 15,
-    opacity: 0.7,
+    fontSize: 16,
     color: "#000",
   },
 });
