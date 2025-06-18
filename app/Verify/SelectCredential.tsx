@@ -12,22 +12,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Ionicons } from "@expo/vector-icons";
 import { RequestObject, StoredCredential } from "@/types";
 import { Button } from "@/components/ui/button";
-import Carousel, {
-  ICarouselInstance,
-  Pagination,
-} from "react-native-reanimated-carousel";
-import { useSharedValue } from "react-native-reanimated";
+import Carousel, { Pagination } from "react-native-reanimated-carousel";
 import { Colors } from "@/constants/Colors";
 import { useWallet } from "@/contexts/WalletContext";
 import { InfoItem } from "@/components/InfoItem";
 import { CircleIcon } from "@/components/CircleIcon";
 import { CredentialCard } from "@/components/CredentialCard";
 import { ProviderInfo } from "@/components/ProviderInfo";
+import { useCredentialCarousel } from "@/hooks/useCredentialCarousel";
 
 // Constants
 const REQUIRED_CLAIMS = ["iss", "vct"] as const;
@@ -44,13 +41,17 @@ const PRESENTATION_FRAME = {
 
 export default function SelectCredentialScreen() {
   const walletSDK = useWallet();
-  const [credentials, setCredentials] = useState<StoredCredential[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [requestObject, setRequestObject] = useState<RequestObject>();
-  const carouselRef = useRef<ICarouselInstance>(null);
-  const progress = useSharedValue<number>(0);
+  const {
+    credentials,
+    setCredentials,
+    selectedCredential,
+    carouselRef,
+    progress,
+    setCurrentIndex,
+    onPressPagination,
+  } = useCredentialCarousel();
 
-  const selectedCredential = credentials[currentIndex];
   const claims = selectedCredential;
 
   const params = useLocalSearchParams<{ requestUri: string }>();
@@ -133,19 +134,6 @@ export default function SelectCredentialScreen() {
       ...prev,
       [option]: !prev[option],
     }));
-  };
-
-  const ref = useRef<ICarouselInstance>(null);
-
-  const onPressPagination = (index: number) => {
-    ref.current?.scrollTo({
-      /**
-       * Calculate the difference between the current index and the target index
-       * to ensure that the carousel scrolls to the nearest index
-       */
-      count: index - progress.value,
-      animated: true,
-    });
   };
 
   if (!claims) return <Text>No claims</Text>;
