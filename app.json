@@ -9,13 +9,23 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.seoheegg.examplewallet",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "appleTeamId": "P3A48743C4"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.seoheegg.examplewallet"
     },
     "web": {
       "bundler": "metro",
@@ -44,6 +54,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1a9ea0b7-3e0d-494f-8807-447131f2c933"
+      }
+    },
+    "owner": "hopae"
   }
 }
