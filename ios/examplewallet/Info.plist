@@ -4,8 +4,6 @@
   <dict>
     <key/>
     <string/>
-    <key>NSBluetoothAlwaysUsageDescription</key>
-<string>Bluetooth is used to communicate with nearby devices.</string>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>CFBundleDevelopmentRegion</key>
@@ -79,6 +77,10 @@
     <array>
       <string>bluetooth-central</string>
       <string>bluetooth-peripheral</string>
+      <string>fetch</string>
+      <string>processing</string>
+      <string>remote-notification</string>
+      <string>nearby-interaction</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
