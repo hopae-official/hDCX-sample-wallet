@@ -192,7 +192,8 @@ export default function HomeScreen() {
     }
 
     try {
-      const encodedData = Buffer.from(data).toString("base64");
+      console.log('data', data)
+      const encodedData = base64.encode(data);
       await connectedDevice.writeCharacteristicWithResponseForService(
         SERVICE_UUID,
         CHARACTERISTIC_UUID,
