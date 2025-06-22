@@ -62,7 +62,7 @@ export default function HomeScreen() {
       Peripheral.onStateChanged(async (state) => {
         if (state === "poweredOn") {
           const char = new Characteristic({
-            uuid: SERVICE_UUID,
+            uuid: CHARACTERISTIC_UUID,
             value: base64.encode("initial"),
             permissions: ["readable", "writeable"],
             properties: ["read", "write", "notify"],
