@@ -44,7 +44,7 @@ export default function HomeScreen() {
       // Check verifier mode first
       const verifierMode = await AsyncStorage.getItem("verifier_mode");
       setIsVerifierMode(verifierMode === "true");
-      
+
       if (verifierMode !== "true") {
         console.log("Peripheral mode disabled - not in verifier mode");
         return;
@@ -120,18 +120,23 @@ export default function HomeScreen() {
       setIsScanning(true);
       console.log("Starting scan...");
 
-      bleManager.startDeviceScan([SERVICE_UUID], null, (error, device) => {
-        console.log('device', device)
+      bleManager.startDeviceScan([SERVICE_UUID], null, async (error, device) => {
+        console.log("device", device);
         if (error) {
           console.error("Scanning error:", error);
           setIsScanning(false);
           return;
         }
 
-        if (device && device.localName === DEVICE_NAME) {
-          console.log('connect!!!!!!!!!!!!!!!')
+        if (
+          device &&
+          device.localName === DEVICE_NAME &&
+          device.isConnectable
+        ) {
+          console.log("connect!!!!!!!!!!!!!!!");
+
+          await connectToDevice(device);
           bleManager.stopDeviceScan();
-          connectToDevice(device);
         }
       });
 
