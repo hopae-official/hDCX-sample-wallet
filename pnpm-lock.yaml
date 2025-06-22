@@ -131,6 +131,9 @@ importers:
       react-native-gesture-handler:
         specifier: ~2.24.0
         version: 2.24.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+      react-native-nfc-manager:
+        specifier: ^3.16.1
+        version: 3.16.1
       react-native-reanimated:
         specifier: ~3.17.5
         version: 3.17.5(@babel/core@7.27.4)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -3798,6 +3801,14 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
+
+  react-native-nfc-manager@3.16.1:
+    resolution: {integrity: sha512-rYhJSThAxAT4AVpZzZJc3X1jiTnZQlmrzk9DeeWLstUTXCoECt/75brLgn+EiXK+AfONnMnFdsSzIyruVWyIdw==}
+    peerDependencies:
+      '@expo/config-plugins': 8 || 9
+    peerDependenciesMeta:
+      '@expo/config-plugins':
+        optional: true
 
   react-native-reanimated-carousel@4.0.2:
     resolution: {integrity: sha512-vNpCfPlFoOVKHd+oB7B0luoJswp+nyz0NdJD8+LCrf25JiNQXfM22RSJhLaksBHqk3fm8R4fKWPNcfy5w7wL1Q==}
@@ -9076,6 +9087,8 @@ snapshots:
     dependencies:
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)
+
+  react-native-nfc-manager@3.16.1: {}
 
   react-native-reanimated-carousel@4.0.2(react-native-gesture-handler@2.24.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-reanimated@3.17.5(@babel/core@7.27.4)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:

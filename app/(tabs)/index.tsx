@@ -1,9 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,11 +11,73 @@ import { Claim } from "@/types";
 import { useWallet } from "@/contexts/WalletContext";
 import logger from "../../utils/logger";
 import { CredentialCard } from "@/components/CredentialCard";
+import NfcManager, { NfcTech, Ndef } from "react-native-nfc-manager";
+
+// Pre-step, call this before any NFC operations
+NfcManager.start();
 
 export default function HomeScreen() {
   const walletSDK = useWallet();
   const [credentials, setCredentials] = useState<Claim[]>([]);
 
+  async function readNdef() {
+    try {
+      // register for the NFC tag with NDEF in it
+      await NfcManager.requestTechnology(NfcTech.Ndef);
+      // the resolved tag object will contain `ndefMessage` property
+      const tag = await NfcManager.getTag();
+      
+      if (tag?.ndefMessage && tag.ndefMessage.length > 0) {
+        // Get the first NDEF record
+        const ndefRecord = tag.ndefMessage[0];
+        
+        // Decode the payload if it's a text record (TNF === 1 and type === [84] which is 'T')
+        if (ndefRecord.tnf === 1 && ndefRecord.type[0] === 84) {
+          const text = Ndef.text.decodePayload(ndefRecord.payload);
+          console.log('[NFC] Decoded text:', text);
+        }
+      }
+    } catch (ex) {
+      console.warn("Oops!", ex, JSON.stringify(ex));
+    } finally {
+      // stop the nfc scanning
+      NfcManager.cancelTechnologyRequest();
+    }
+  }
+
+  async function writeNdef({ type, value }: { type: string; value: string }) {
+    let result = false;
+
+    try {
+      // STEP 1: NFC 태그와의 통신을 시작
+      console.log('[NFC] STEP 1: Requesting NFC technology...');
+      await NfcManager.requestTechnology(NfcTech.Ndef);
+      console.log('[NFC] STEP 1: NFC tag detected');
+
+      // STEP 2: NDEF 메시지 생성 및 인코딩
+      console.log('[NFC] STEP 2: Creating NDEF message...');
+      const bytes = Ndef.encodeMessage([Ndef.textRecord("Hello NFC")]);
+      console.log('[NFC] STEP 2: Message encoded:', bytes ? 'success' : 'failed');
+
+      if (bytes) {
+        // STEP 3: NFC 태그에 쓰기
+        console.log('[NFC] STEP 3: Writing to NFC tag...');
+        await NfcManager.ndefHandler
+          .writeNdefMessage(bytes);
+        console.log('[NFC] STEP 3: Write successful');
+        result = true;
+      }
+    } catch (ex) {
+      console.warn('[NFC] Error:', ex);
+    } finally {
+      // STEP 4: NFC 세션 종료
+      console.log('[NFC] STEP 4: Cleaning up NFC session...');
+      NfcManager.cancelTechnologyRequest();
+      console.log('[NFC] STEP 4: Cleanup complete');
+    }
+
+    return result;
+  }
   useFocusEffect(
     useCallback(() => {
       (async function loadCredentials() {
@@ -100,6 +157,12 @@ export default function HomeScreen() {
           >
             <Text style={{ color: "white" }}>Add a credential</Text>
           </Button>
+          <TouchableOpacity onPress={readNdef}>
+            <Text>Scan a Tag</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => writeNdef({ type: "text", value: "Hello NFC" })}>
+            <Text>Write a Tag2</Text>
+          </TouchableOpacity>
         </View>
       )}
     </SafeAreaView>
@@ -149,5 +212,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    gap: 20,
   },
 });
