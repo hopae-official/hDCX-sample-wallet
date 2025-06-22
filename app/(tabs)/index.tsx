@@ -40,6 +40,9 @@ export default function HomeScreen() {
   const [isVerifierMode, setIsVerifierMode] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
   const [ready, setReady] = useState(false);
+  const [peripheralChar, setPeripheralChar] = useState<Characteristic | null>(
+    null
+  );
 
   useEffect(() => {
     const setupPeripheral = async () => {
@@ -60,8 +63,6 @@ export default function HomeScreen() {
           PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
         ]);
       }
-
-      let peripheralChar: Characteristic | null = null;
 
       Peripheral.onStateChanged(async (state) => {
         if (state === "poweredOn") {
@@ -96,27 +97,7 @@ export default function HomeScreen() {
                   console.error(" Failed to send notification:", error);
                 }
               },
-              onSubscribe: () => {
-                console.log(" Central subscribed to notifications");
-                // 구독 시 테스트 알림 전송
-                setTimeout(async () => {
-                  try {
-                    await char.notify(base64.encode("Subscription confirmed!"));
-                    console.log(" Subscription confirmation notification sent");
-                  } catch (error) {
-                    console.error(
-                      " Failed to send subscription confirmation:",
-                      error
-                    );
-                  }
-                }, 1000);
-              },
-              onUnsubscribe: () => {
-                console.log(" Central unsubscribed from notifications");
-              },
             });
-
-            peripheralChar = char;
 
             const service = new Service({
               uuid: SERVICE_UUID,
@@ -133,30 +114,7 @@ export default function HomeScreen() {
               serviceUuids: [SERVICE_UUID],
             });
 
-            // 주기적으로 알림 보내기 테스트
-            const notifyInterval = setInterval(async () => {
-              if (peripheralChar) {
-                try {
-                  const timestamp = new Date().toISOString();
-                  await peripheralChar.notify(
-                    base64.encode(`Test notification at ${timestamp}`)
-                  );
-                  console.log(" Periodic test notification sent");
-                } catch (error) {
-                  console.error(
-                    " Failed to send periodic notification:",
-                    error
-                  );
-                }
-              }
-            }, 5000); // 5초마다 알림 전송
-
-            console.log(" Peripheral started advertising");
-
-            // cleanup
-            return () => {
-              clearInterval(notifyInterval);
-            };
+            setPeripheralChar(char);
           } catch (error) {
             console.error(" Failed to setup peripheral:", error);
           }
@@ -243,7 +201,7 @@ export default function HomeScreen() {
       setupCharacteristicMonitoring(discoveredDevice);
 
       console.log(" Connected to device");
-      Alert.alert("Success", "Connected to device");
+
       setReady(true);
     } catch (error) {
       console.error(" Connection error:", error);
@@ -284,7 +242,7 @@ export default function HomeScreen() {
               console.log(" Received notification from peripheral:");
               console.log(" - Base64 encoded:", characteristic.value);
               console.log(" - Decoded data:", decodedData);
-             // Alert.alert("Received Data", decodedData);
+              // Alert.alert("Received Data", decodedData);
             } catch (decodeError) {
               console.error(" Error decoding data:", decodeError);
             }
@@ -350,46 +308,14 @@ export default function HomeScreen() {
     try {
       console.log(" Starting sendDataFromPeripheral with data:", data);
 
-      // 서비스 생성
-      const char = new Characteristic({
-        uuid: CHARACTERISTIC_UUID,
-        value: base64.encode(data),
-        permissions: ["readable", "writeable"],
-        properties: ["read", "write", "notify"],
-        onReadRequest: async () => {
-          console.log(" Central read request received");
-          return base64.encode(data);
-        },
-        onWriteRequest: async (value) => {
-          console.log(
-            " Write request received from Central:",
-            base64.decode(value)
-          );
-        },
-      });
+      if (!peripheralChar) {
+        console.error(" No peripheral characterstic found");
+        return;
+      }
 
-      const service = new Service({
-        uuid: SERVICE_UUID,
-        characteristics: [char],
-      });
-
-      console.log(" Created new service and characteristic");
-
-      // 기존 서비스 제거 후 새로운 서비스 추가
-      //await Peripheral.removeAllServices();
-      await Peripheral.addService(service);
-
-      // 광고 재시작
-      // await Peripheral.startAdvertising({
-      //   name: DEVICE_NAME,
-      //   serviceUuids: [SERVICE_UUID],
-      // });
-
-      // 알림 전송
-      const notifyValue = base64.encode(data);
-      console.log(" Sending notification with value:", notifyValue);
-      await char.notify(notifyValue);
-      console.log(" Notification sent successfully");
+      const encodedData = base64.encode(data);
+      await peripheralChar.notify(encodedData);
+      console.log(" Notification sent successfully **");
     } catch (error) {
       console.error(" Error in sendDataFromPeripheral:", error);
       Alert.alert("Error", "Failed to send data");
