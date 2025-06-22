@@ -4,6 +4,8 @@
   <dict>
     <key/>
     <string/>
+    <key>NSBluetoothAlwaysUsageDescription</key>
+<string>Bluetooth is used to communicate with nearby devices.</string>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>CFBundleDevelopmentRegion</key>
@@ -63,6 +65,8 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to connect to bluetooth devices</string>
     <key>NSCameraUsageDescription</key>
     <string>The app scans QR to save a mobile pass or verify your passes.</string>
     <key>NSMicrophoneUsageDescription</key>
@@ -70,6 +74,11 @@
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
+    </array>
+    <key>UIBackgroundModes</key>
+    <array>
+      <string>bluetooth-central</string>
+      <string>bluetooth-peripheral</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>

@@ -128,12 +128,18 @@ importers:
       react-native:
         specifier: 0.79.2
         version: 0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)
+      react-native-ble-plx:
+        specifier: ^3.5.0
+        version: 3.5.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native-gesture-handler:
         specifier: ~2.24.0
         version: 2.24.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native-nfc-manager:
         specifier: ^3.16.1
         version: 3.16.1
+      react-native-peripheral:
+        specifier: ^0.0.3
+        version: 0.0.3(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native-reanimated:
         specifier: ~3.17.5
         version: 3.17.5(@babel/core@7.27.4)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -3768,6 +3774,13 @@ packages:
   react-is@19.1.0:
     resolution: {integrity: sha512-Oe56aUPnkHyyDxxkvqtd7KkdQP5uIUfHxd5XTb3wE9d/kRnZLmKbDB0GWk919tdQ+mxxPtG6EAs6RMT6i1qtHg==}
 
+  react-native-ble-plx@3.5.0:
+    resolution: {integrity: sha512-PeSnRswHLwLRVMQkOfDaRICtrGmo94WGKhlSC09XmHlqX2EuYgH+vNJpGcLkd8lyiYpEJyf8wlFAdj9Akliwmw==}
+    engines: {node: '>= 18.0.0'}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
   react-native-css-interop@0.1.22:
     resolution: {integrity: sha512-Mu01e+H9G+fxSWvwtgWlF5MJBJC4VszTCBXopIpeR171lbeBInHb8aHqoqRPxmJpi3xIHryzqKFOJYAdk7PBxg==}
     engines: {node: '>=18'}
@@ -3809,6 +3822,12 @@ packages:
     peerDependenciesMeta:
       '@expo/config-plugins':
         optional: true
+
+  react-native-peripheral@0.0.3:
+    resolution: {integrity: sha512-PdSs0V8HPfZSaZ9MZvtwktG5m6n/JRjS0J83iD+C5VCMQ2Rhj1adgmZ4ZzR+mSvXj5tdtUh98nkx1n9v9Wl1eg==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-native: '>=0.59.0-rc.0 <1.0.x'
 
   react-native-reanimated-carousel@4.0.2:
     resolution: {integrity: sha512-vNpCfPlFoOVKHd+oB7B0luoJswp+nyz0NdJD8+LCrf25JiNQXfM22RSJhLaksBHqk3fm8R4fKWPNcfy5w7wL1Q==}
@@ -9053,6 +9072,11 @@ snapshots:
 
   react-is@19.1.0: {}
 
+  react-native-ble-plx@3.5.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)
+
   react-native-css-interop@0.1.22(react-native-reanimated@3.17.5(@babel/core@7.27.4)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-safe-area-context@5.4.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)(tailwindcss@3.3.5):
     dependencies:
       '@babel/helper-module-imports': 7.27.1
@@ -9089,6 +9113,11 @@ snapshots:
       react-native: 0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)
 
   react-native-nfc-manager@3.16.1: {}
+
+  react-native-peripheral@0.0.3(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+      react-native: 0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)
 
   react-native-reanimated-carousel@4.0.2(react-native-gesture-handler@2.24.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-reanimated@3.17.5(@babel/core@7.27.4)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:

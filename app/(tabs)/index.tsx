@@ -1,9 +1,14 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Platform,
+  Alert,
+} from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Colors } from "@/constants/Colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "@/components/ui/button";
@@ -12,13 +17,125 @@ import { useWallet } from "@/contexts/WalletContext";
 import logger from "../../utils/logger";
 import { CredentialCard } from "@/components/CredentialCard";
 import NfcManager, { NfcTech, Ndef } from "react-native-nfc-manager";
+import { BleManager, Device } from "react-native-ble-plx";
 
 // Pre-step, call this before any NFC operations
 NfcManager.start();
 
+// Initialize BLE manager for central mode
+const bleManager = new BleManager();
+const SERVICE_UUID = "4FAFC201-1FB5-459E-8FCC-C5C9C331914B";
+const CHARACTERISTIC_UUID = "BEB5483E-36E1-4688-B7F5-EA07361B26A8";
+
 export default function HomeScreen() {
   const walletSDK = useWallet();
   const [credentials, setCredentials] = useState<Claim[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
+
+  // Request permissions
+  useEffect(() => {
+    const requestPermissions = async () => {
+      if (Platform.OS === "ios") {
+        const status = await bleManager.state();
+        if (status === "PoweredOff") {
+          Alert.alert("Bluetooth is powered off", "Please enable Bluetooth");
+          return;
+        }
+      }
+    };
+
+    requestPermissions();
+    return () => {
+      bleManager.destroy();
+    };
+  }, []);
+
+  // Function to start scanning for peripherals
+  const startScanning = async () => {
+    if (isScanning) return;
+
+    try {
+      setIsScanning(true);
+      console.log("Starting scan...");
+
+      bleManager.startDeviceScan([SERVICE_UUID], null, (error, device) => {
+        if (error) {
+          console.error("Scanning error:", error);
+          setIsScanning(false);
+          return;
+        }
+
+        if (device && device.name === "HDCXWallet") {
+          bleManager.stopDeviceScan();
+          connectToDevice(device);
+        }
+      });
+
+      // Stop scanning after 10 seconds
+      setTimeout(() => {
+        bleManager.stopDeviceScan();
+        setIsScanning(false);
+      }, 10000);
+    } catch (error) {
+      console.error("Scan error:", error);
+      setIsScanning(false);
+    }
+  };
+
+  // Function to connect to a peripheral
+  const connectToDevice = async (device: Device) => {
+    try {
+      const connectedDevice = await device.connect();
+      setConnectedDevice(connectedDevice);
+
+      await connectedDevice.discoverAllServicesAndCharacteristics();
+      console.log("Connected to device:", device.name);
+
+      // Monitor for incoming data
+      connectedDevice.monitorCharacteristicForService(
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID,
+        (error, characteristic) => {
+          if (error) {
+            console.error("Monitoring error:", error);
+            return;
+          }
+          if (characteristic?.value) {
+            const decodedValue = Buffer.from(
+              characteristic.value,
+              "base64"
+            ).toString();
+            console.log("Received data:", decodedValue);
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Connection error:", error);
+      Alert.alert("Error", "Failed to connect to device");
+    }
+  };
+
+  // Function to send data to connected device
+  const sendData = async (data: string) => {
+    if (!connectedDevice) {
+      Alert.alert("Error", "No device connected");
+      return;
+    }
+
+    try {
+      const encodedData = Buffer.from(data).toString("base64");
+      await connectedDevice.writeCharacteristicWithResponseForService(
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID,
+        encodedData
+      );
+      console.log("Data sent successfully");
+    } catch (error) {
+      console.error("Send data error:", error);
+      Alert.alert("Error", "Failed to send data");
+    }
+  };
 
   async function readNdef() {
     try {
@@ -26,15 +143,15 @@ export default function HomeScreen() {
       await NfcManager.requestTechnology(NfcTech.Ndef);
       // the resolved tag object will contain `ndefMessage` property
       const tag = await NfcManager.getTag();
-      
+
       if (tag?.ndefMessage && tag.ndefMessage.length > 0) {
         // Get the first NDEF record
         const ndefRecord = tag.ndefMessage[0];
-        
+
         // Decode the payload if it's a text record (TNF === 1 and type === [84] which is 'T')
         if (ndefRecord.tnf === 1 && ndefRecord.type[0] === 84) {
           const text = Ndef.text.decodePayload(ndefRecord.payload);
-          console.log('[NFC] Decoded text:', text);
+          console.log("[NFC] Decoded text:", text);
         }
       }
     } catch (ex) {
@@ -50,30 +167,32 @@ export default function HomeScreen() {
 
     try {
       // STEP 1: NFC 태그와의 통신을 시작
-      console.log('[NFC] STEP 1: Requesting NFC technology...');
+      console.log("[NFC] STEP 1: Requesting NFC technology...");
       await NfcManager.requestTechnology(NfcTech.Ndef);
-      console.log('[NFC] STEP 1: NFC tag detected');
+      console.log("[NFC] STEP 1: NFC tag detected");
 
       // STEP 2: NDEF 메시지 생성 및 인코딩
-      console.log('[NFC] STEP 2: Creating NDEF message...');
+      console.log("[NFC] STEP 2: Creating NDEF message...");
       const bytes = Ndef.encodeMessage([Ndef.textRecord("Hello NFC")]);
-      console.log('[NFC] STEP 2: Message encoded:', bytes ? 'success' : 'failed');
+      console.log(
+        "[NFC] STEP 2: Message encoded:",
+        bytes ? "success" : "failed"
+      );
 
       if (bytes) {
         // STEP 3: NFC 태그에 쓰기
-        console.log('[NFC] STEP 3: Writing to NFC tag...');
-        await NfcManager.ndefHandler
-          .writeNdefMessage(bytes);
-        console.log('[NFC] STEP 3: Write successful');
+        console.log("[NFC] STEP 3: Writing to NFC tag...");
+        await NfcManager.ndefHandler.writeNdefMessage(bytes);
+        console.log("[NFC] STEP 3: Write successful");
         result = true;
       }
     } catch (ex) {
-      console.warn('[NFC] Error:', ex);
+      console.warn("[NFC] Error:", ex);
     } finally {
       // STEP 4: NFC 세션 종료
-      console.log('[NFC] STEP 4: Cleaning up NFC session...');
+      console.log("[NFC] STEP 4: Cleaning up NFC session...");
       NfcManager.cancelTechnologyRequest();
-      console.log('[NFC] STEP 4: Cleanup complete');
+      console.log("[NFC] STEP 4: Cleanup complete");
     }
 
     return result;
@@ -160,9 +279,32 @@ export default function HomeScreen() {
           <TouchableOpacity onPress={readNdef}>
             <Text>Scan a Tag</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => writeNdef({ type: "text", value: "Hello NFC" })}>
+          <TouchableOpacity
+            onPress={() => writeNdef({ type: "text", value: "Hello NFC" })}
+          >
             <Text>Write a Tag2</Text>
           </TouchableOpacity>
+          <View style={styles.bleContainer}>
+            <Button
+              variant="default"
+              style={[
+                styles.bleButton,
+                { backgroundColor: isScanning ? Colors.light.orange : "blue" },
+              ]}
+              onPress={startScanning}
+            >
+              <Text style={{ color: "white" }}>Scan for Devices</Text>
+            </Button>
+            {connectedDevice && (
+              <Button
+                variant="default"
+                style={styles.bleButton}
+                onPress={() => sendData("Hello from HDCX Wallet!")}
+              >
+                <Text style={{ color: "white" }}>Send Test Message</Text>
+              </Button>
+            )}
+          </View>
         </View>
       )}
     </SafeAreaView>
@@ -213,5 +355,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     gap: 20,
+  },
+  bleContainer: {
+    marginTop: 20,
+    gap: 10,
+    width: "100%",
+  },
+  bleButton: {
+    width: "100%",
+    marginVertical: 5,
   },
 });
