@@ -5,6 +5,7 @@ import {
   View,
   Platform,
   Alert,
+  PermissionsAndroid,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +19,9 @@ import logger from "../../utils/logger";
 import { CredentialCard } from "@/components/CredentialCard";
 import NfcManager, { NfcTech, Ndef } from "react-native-nfc-manager";
 import { BleManager, Device } from "react-native-ble-plx";
+import Peripheral, { Characteristic, Service } from "react-native-peripheral";
+import base64 from "react-native-base64";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Pre-step, call this before any NFC operations
 NfcManager.start();
@@ -26,12 +30,69 @@ NfcManager.start();
 const bleManager = new BleManager();
 const SERVICE_UUID = "4FAFC201-1FB5-459E-8FCC-C5C9C331914B";
 const CHARACTERISTIC_UUID = "BEB5483E-36E1-4688-B7F5-EA07361B26A8";
+const DEVICE_NAME = "HDCXWallet";
 
 export default function HomeScreen() {
   const walletSDK = useWallet();
   const [credentials, setCredentials] = useState<Claim[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
+  const [isVerifierMode, setIsVerifierMode] = useState(false);
+
+  useEffect(() => {
+    const setupPeripheral = async () => {
+      // Check verifier mode first
+      const verifierMode = await AsyncStorage.getItem("verifier_mode");
+      setIsVerifierMode(verifierMode === "true");
+      
+      if (verifierMode !== "true") {
+        console.log("Peripheral mode disabled - not in verifier mode");
+        return;
+      }
+
+      // Android BLE 권한 요청
+      if (Platform.OS === "android") {
+        await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+        ]);
+      }
+
+      Peripheral.onStateChanged(async (state) => {
+        if (state === "poweredOn") {
+          const char = new Characteristic({
+            uuid: SERVICE_UUID,
+            value: base64.encode("initial"),
+            permissions: ["readable", "writeable"],
+            properties: ["read", "write", "notify"],
+            onReadRequest: async () => {
+              console.log("📥 Central read request received");
+              return base64.encode("hello");
+            },
+            onWriteRequest: async (value) => {
+              console.log("✍️ Received from Central:", base64.decode(value));
+            },
+          });
+
+          const service = new Service({
+            uuid: SERVICE_UUID,
+            characteristics: [char],
+          });
+
+          await Peripheral.addService(service);
+          await Peripheral.startAdvertising({
+            name: DEVICE_NAME,
+            serviceUuids: [SERVICE_UUID],
+          });
+
+          console.log("🟢 BLE Peripheral started in verifier mode");
+        }
+      });
+    };
+
+    setupPeripheral();
+  }, []);
 
   // Request permissions
   useEffect(() => {
@@ -60,13 +121,15 @@ export default function HomeScreen() {
       console.log("Starting scan...");
 
       bleManager.startDeviceScan([SERVICE_UUID], null, (error, device) => {
+        console.log('device', device)
         if (error) {
           console.error("Scanning error:", error);
           setIsScanning(false);
           return;
         }
 
-        if (device && device.name === "HDCXWallet") {
+        if (device && device.localName === DEVICE_NAME) {
+          console.log('connect!!!!!!!!!!!!!!!')
           bleManager.stopDeviceScan();
           connectToDevice(device);
         }
