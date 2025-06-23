@@ -360,6 +360,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - MultiplatformBleAdapter (0.2.0)
+  - PromisesObjC (2.4.0)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -1684,8 +1686,36 @@ PODS:
     - React-jsiexecutor
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
+  - react-native-ble-plx (3.5.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - MultiplatformBleAdapter (= 0.2.0)
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - react-native-nfc-manager (3.16.1):
     - React-Core
+  - react-native-peripheral (0.0.3):
+    - PromisesObjC
+    - React
   - react-native-safe-area-context (5.4.0):
     - DoubleConversion
     - glog
@@ -2405,7 +2435,9 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - react-native-ble-plx (from `../node_modules/react-native-ble-plx`)
   - react-native-nfc-manager (from `../node_modules/react-native-nfc-manager`)
+  - react-native-peripheral (from `../node_modules/react-native-peripheral`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2448,6 +2480,8 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - lottie-ios
+    - MultiplatformBleAdapter
+    - PromisesObjC
     - SocketRocket
     - ZXingObjC
 
@@ -2581,8 +2615,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-ble-plx:
+    :path: "../node_modules/react-native-ble-plx"
   react-native-nfc-manager:
     :path: "../node_modules/react-native-nfc-manager"
+  react-native-peripheral:
+    :path: "../node_modules/react-native-peripheral"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-webview:
@@ -2695,6 +2733,8 @@ SPEC CHECKSUMS:
   hermes-engine: 314be5250afa5692b57b4dd1705959e1973a8ebe
   lottie-ios: a881093fab623c467d3bce374367755c272bdd59
   lottie-react-native: 2ed3839d12e44b5946a901687e9ab00ee9bc3232
+  MultiplatformBleAdapter: b1fddd0d499b96b607e00f0faa8e60648343dc1d
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCT-Folly: 36fe2295e44b10d831836cc0d1daec5f8abcf809
   RCTDeprecation: 83ffb90c23ee5cea353bd32008a7bca100908f8c
   RCTRequired: eb7c0aba998009f47a540bec9e9d69a54f68136e
@@ -2726,7 +2766,9 @@ SPEC CHECKSUMS:
   React-logger: 368570a253f00879a1e4fea24ed4047e72e7bbf3
   React-Mapbuffer: c04fcda1c6281fc0a6824c7dcc1633dd217ac1ec
   React-microtasksnativemodule: ca2804a25fdcefffa0aa942aa23ab53b99614a34
+  react-native-ble-plx: 939b36062484b3308abc9b815e0a3b29a972d366
   react-native-nfc-manager: 5213321cf6c18d879c8092c0bf56806b771ec5ac
+  react-native-peripheral: ae61f4dcd31e46cf145ca91683c8227652e24f85
   react-native-safe-area-context: 00d03dc688ba86664be66f9e3f203fc7d747d899
   react-native-webview: cde150463e7caa49b316b0ed1871e7ef8193bef4
   React-NativeModulesApple: 452b86b29fae99ed0a4015dca3ad9cd222f88abf
