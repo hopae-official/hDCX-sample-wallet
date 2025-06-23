@@ -16,6 +16,7 @@ import { Claim } from "@/types";
 import { useWallet } from "@/contexts/WalletContext";
 import logger from "../../utils/logger";
 import { CredentialCard } from "@/components/CredentialCard";
+import { readNdef } from "@/utils/nfc";
 
 export default function HomeScreen() {
   const walletSDK = useWallet();
@@ -50,6 +51,21 @@ export default function HomeScreen() {
     });
   };
 
+  const handleScanTag = async () => {
+    const result = await readNdef();
+    if (!result) return;
+
+    const verifyRegex = /request_uri=([^&]*)/;
+    const verifyMatch = result.match(verifyRegex);
+
+    if (verifyMatch && verifyMatch[1]) {
+      router.push({
+        pathname: "/Proximity",
+        params: { requestUri: result },
+      });
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {credentials.length > 0 ? (
@@ -74,6 +90,10 @@ export default function HomeScreen() {
               />
             ))}
           </View>
+
+          <TouchableOpacity style={styles.nfcButton} onPress={handleScanTag}>
+            <Ionicons size={25} name="scan" color={"white"} />
+          </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.placeholderContainer}>
@@ -149,5 +169,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  nfcButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    backgroundColor: Colors.light.lightBlue,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 3,
   },
 });
