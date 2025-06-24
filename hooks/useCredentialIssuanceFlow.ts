@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useWallet } from "@/contexts/WalletContext";
 import { getCredentialClaims } from "@/utils";
 import { Alert } from "react-native";
+import logger from "@/utils/logger";
 
 type AnimoCredentialResponse = {
   credential: string;
@@ -36,6 +37,7 @@ export const useCredentialIssuanceFlow = (credentialOfferUri?: string) => {
           isSuccess: true,
         };
       } catch (error) {
+        logger.error('Failed to receive credential', error)
         Alert.alert(
           "Failed to receive credential:",
           error instanceof Error

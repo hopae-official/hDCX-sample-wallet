@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import {
   Text,
   TouchableOpacity,
@@ -16,9 +16,11 @@ import {
 
 import Peripheral, { Characteristic, Service } from "react-native-peripheral";
 import base64 from "react-native-base64";
-import NfcManager, { NfcTech, Ndef } from "react-native-nfc-manager";
 import { writeNdef } from "@/utils/nfc";
 import logger from "@/utils/logger";
+import { useWallet } from "@/contexts/WalletContext";
+import { RequestObject } from "@/types";
+import { Oid4VpClient } from "@vdcs/oid4vp-client";
 
 const SERVICE_UUID = "4FAFC201-1FB5-459E-8FCC-C5C9C331914B";
 const CHARACTERISTIC_UUID = "BEB5483E-36E1-4688-B7F5-EA07361B26A8";
@@ -34,6 +36,26 @@ export default function SampleVerifierScreen() {
     "initial" | "advertising" | "connected" | "disconnected"
   >("initial");
   const [requestUri, setRequestUri] = useState(params.requestUri);
+
+  const chunkStore: { [key: string]: string[] } = {};
+  const walletSDK = useWallet();
+  const requestObject = useRef<RequestObject | null>(null);
+
+  const CHUNK_SIZE = 300; // Adjust this size based on your needs
+
+  const sendChunkedData = async (char: Characteristic, data: string) => {
+    const encodedData = base64.encode(data);
+    const totalChunks = Math.ceil(encodedData.length / CHUNK_SIZE);
+
+    for (let i = 0; i < totalChunks; i++) {
+      const chunk = encodedData.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+      const chunkMessage = `${i}:${totalChunks}:${chunk}`;
+      await char.notify(base64.encode(chunkMessage));
+
+      // Add a small delay between chunks to ensure reliable transmission
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  };
 
   const setupPeripheral = useCallback(async () => {
     if (Platform.OS === "android") {
@@ -61,20 +83,100 @@ export default function SampleVerifierScreen() {
               "indicate",
             ],
             onWriteRequest: async (value) => {
-              const decodedValue = base64.decode(value);
-              const parsedValue = JSON.parse(decodedValue);
-              console.log(
-                " Write request received from Central:",
-                decodedValue
-              );
+              try {
+                console.log("value ** ", value);
+                const cleanValue = value.replace(/\s/g, "");
+                const decodedValue = base64.decode(cleanValue);
+                console.log("decodedValue ** ", decodedValue);
 
-              if (parsedValue?.type === "data") {
-                logger.log("Received data:", parsedValue.value);
-              }
+                // Parse chunk metadata (format: index:total:data)
+                const [indexStr, totalStr, chunkData] = decodedValue.split(":");
+                const chunkIndex = parseInt(indexStr, 10);
+                const totalChunks = parseInt(totalStr, 10);
 
-              if (parsedValue?.type === "ack") {
-                logger.log("Bluetooth connection established");
-                //setStep(2);
+                console.log(`Received chunk ${chunkIndex + 1}/${totalChunks}`);
+
+                // Create or update chunk array for this message
+                const messageKey = `${CHARACTERISTIC_UUID}_${totalChunks}`;
+                if (!chunkStore[messageKey]) {
+                  chunkStore[messageKey] = new Array(totalChunks).fill("");
+                }
+
+                // Store this chunk
+                chunkStore[messageKey][chunkIndex] = chunkData;
+
+                // Check if we have all chunks
+                const isComplete = chunkStore[messageKey].every(
+                  (chunk) => chunk !== ""
+                );
+
+                if (isComplete) {
+                  // Combine all chunks
+                  const completeData = chunkStore[messageKey].join("");
+                  console.log("Received complete data:", completeData);
+
+                  try {
+                    // Parse the complete data
+                    const decoded = base64.decode(completeData);
+                    console.log("Decoded complete data:", decoded);
+
+                    if (
+                      decoded.trim().startsWith("{") ||
+                      decoded.trim().startsWith("[")
+                    ) {
+                      const jsonData = JSON.parse(decoded);
+                      console.log("Parsed JSON data:", jsonData);
+
+                      if (jsonData.type === "ack") {
+                        // Connection established
+
+                        setStep(2);
+
+                        const reqObject = await walletSDK.load(requestUri);
+                        requestObject.current = reqObject;
+
+                        // Send request object in chunks
+                        await sendChunkedData(
+                          char,
+                          JSON.stringify({
+                            type: "request_object",
+                            value: reqObject,
+                          })
+                        );
+                      }
+
+                      if (jsonData.type === "vp_token") {
+                        logger.log("Presentation received:", jsonData);
+
+                        if (!requestObject.current) {
+                          logger.error("Request object is undefined");
+                          return;
+                        }
+
+                        const client = new Oid4VpClient(requestObject.current);
+                        console.log("jsonData.value", jsonData.value);
+                        const result = await client.sendPresentation(
+                          JSON.parse(jsonData.value)
+                        );
+
+                        await sendChunkedData(
+                          char,
+                          JSON.stringify({
+                            type: "presentation_result",
+                            value: result,
+                          })
+                        );
+                      }
+                    }
+                  } catch (parseError) {
+                    console.error("Error parsing complete data:", parseError);
+                  }
+
+                  // Clear the stored chunks
+                  delete chunkStore[messageKey];
+                }
+              } catch (error) {
+                logger.error("Failed to handle write request", error);
               }
             },
           });
@@ -210,9 +312,27 @@ export default function SampleVerifierScreen() {
           </>
         )}
 
+        {step === 2 && (
+          <>
+            <Text style={styles.title}>Bluetooth Connected</Text>
+            <Text style={styles.description}>Waiting Presentation...</Text>
+            <ActivityIndicator color={Colors.light.lightBlue} size="large" />
+          </>
+        )}
+
         <TouchableOpacity style={styles.qrScanButton} onPress={refreshVerifier}>
           <Ionicons size={25} name="refresh" color={"white"} />
         </TouchableOpacity>
+
+        <Button
+          variant={"default"}
+          style={{ backgroundColor: Colors.light.lightBlue }}
+          onPress={() => {
+            sendDataFromPeripheral("test");
+          }}
+        >
+          <Text style={{ color: "white" }}>send test</Text>
+        </Button>
       </View>
     </>
   );
@@ -252,5 +372,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3,
     elevation: 3,
+  },
+  description: {
+    fontSize: 18,
+    marginBottom: 20,
   },
 });

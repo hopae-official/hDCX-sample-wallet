@@ -15,7 +15,7 @@ export default function ProximityScreen() {
 
   const handleClickBLE = () => {
     router.push({
-      pathname: "/Verify/CredentialPresentation",
+      pathname: "/Proximity/CredentialPresentation",
       params: { requestUri },
     });
   };
