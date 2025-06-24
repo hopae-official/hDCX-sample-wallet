@@ -21,6 +21,7 @@ import logger from "@/utils/logger";
 import { useWallet } from "@/contexts/WalletContext";
 import { RequestObject } from "@/types";
 import { Oid4VpClient } from "@vdcs/oid4vp-client";
+import LottieView from "lottie-react-native";
 
 const SERVICE_UUID = "4FAFC201-1FB5-459E-8FCC-C5C9C331914B";
 const CHARACTERISTIC_UUID = "BEB5483E-36E1-4688-B7F5-EA07361B26A8";
@@ -159,6 +160,10 @@ export default function SampleVerifierScreen() {
                           JSON.parse(jsonData.value)
                         );
 
+                        if (!result) {
+                          logger.error("Presentation failed");
+                        }
+
                         await sendChunkedData(
                           char,
                           JSON.stringify({
@@ -166,6 +171,8 @@ export default function SampleVerifierScreen() {
                             value: result,
                           })
                         );
+
+                        setStep(3)
                       }
                     }
                   } catch (parseError) {
@@ -320,19 +327,25 @@ export default function SampleVerifierScreen() {
           </>
         )}
 
+        {step === 3 && (
+          <>
+            <Text style={styles.title}>Verify Success</Text>
+            <LottieView
+              speed={0.8}
+              style={{
+                width: 64,
+                height: 64,
+              }}
+              autoPlay={true}
+              loop={false}
+              source={require("@/assets/lotties/check.json")}
+            />
+          </>
+        )}
+
         <TouchableOpacity style={styles.qrScanButton} onPress={refreshVerifier}>
           <Ionicons size={25} name="refresh" color={"white"} />
         </TouchableOpacity>
-
-        <Button
-          variant={"default"}
-          style={{ backgroundColor: Colors.light.lightBlue }}
-          onPress={() => {
-            sendDataFromPeripheral("test");
-          }}
-        >
-          <Text style={{ color: "white" }}>send test</Text>
-        </Button>
       </View>
     </>
   );

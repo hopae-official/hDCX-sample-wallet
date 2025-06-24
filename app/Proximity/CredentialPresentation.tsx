@@ -54,8 +54,6 @@ export default function ProximityCredentialPresentationScreen() {
     null
   );
 
-  console.log("requestObject", requestObject);
-
   useEffect(() => {
     (async function loadCredentials() {
       const storedCredentials = await walletSDK.selectCredentials();
@@ -147,7 +145,7 @@ export default function ProximityCredentialPresentationScreen() {
           setIsScanning(false);
         }, 10000);
       } catch (error) {
-        console.error("Scan error:", error);
+        logger.error("Scan error:", error);
         setIsScanning(false);
       }
     };
@@ -157,8 +155,28 @@ export default function ProximityCredentialPresentationScreen() {
 
   useEffect(() => {
     if (connectedDevice && subscription) {
-      console.log("connectedDevice", connectedDevice);
+      logger.log("connectedDevice", connectedDevice);
       sendDataViaBLE(JSON.stringify({ type: "ack" }));
+    }
+  }, [connectedDevice, subscription]);
+
+  useEffect(() => {
+    return () => {
+      if (subscription) {
+        subscription.remove();
+        setSubscription(null);
+        logger.log("Characteristic monitoring subscription cleaned up");
+      }
+    };
+  }, [subscription]);
+
+  useEffect(() => {
+    if (!connectedDevice && subscription) {
+      subscription.remove();
+      setSubscription(null);
+      logger.log(
+        "Characteristic monitoring subscription removed due to device disconnection"
+      );
     }
   }, [connectedDevice, subscription]);
 
@@ -247,6 +265,10 @@ export default function ProximityCredentialPresentationScreen() {
 
                     if (jsonData.type === "request_object") {
                       setRequestObject(jsonData.value);
+                    }
+
+                    if (jsonData.type === "presentation_result") {
+                      router.replace("/Verify/VerifyResult");
                     }
                   }
                 } catch (parseError) {
