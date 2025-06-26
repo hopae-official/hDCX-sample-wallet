@@ -1,50 +1,187 @@
-# Welcome to your Expo app 👋
+# hDCX Sample Wallet
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native digital credential wallet app built with Expo and [`@hDCX/wallet-core`](https://github.com/hopae-official/hDCX-js).
 
-## Get started
+## Prerequisites
 
-1. Install dependencies
+- Node.js 18 or later
+- pnpm 8 or later
+- Expo CLI (`pnpm install -g expo-cli`)
+- Expo EAS CLI (`pnpm install -g eas-cli`)
+- Expo account (for EAS builds)
+- Physical iOS/Android device for testing BLE and NFC features
 
-   ```bash
-   npm install
-   ```
+## Installation
 
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+1. Clone the repository
 
 ```bash
-npm run reset-project
+git clone https://github.com/hopae-official/hDCX-sample-wallet.git
+cd hDCX-sample-wallet
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install pnpm (if not installed)
 
-## Learn more
+```bash
+npm install -g pnpm
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+3. Install dependencies
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+pnpm install
+```
 
-## Join the community
+## Development
 
-Join our community of developers creating universal apps.
+1. Start the development server
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+pnpm start
+```
+
+2. Run on devices
+
+- iOS Simulator/Device
+
+```bash
+pnpm ios:device
+```
+
+- iOS Simulator
+
+```bash
+pnpm ios
+```
+
+- Android Device
+
+```bash
+pnpm android:device
+```
+
+- Android Emulator
+
+```bash
+pnpm android
+```
+
+## Building with EAS
+
+1. Configure EAS
+
+```bash
+# Login to your Expo account
+eas login
+
+# Configure the project
+eas build:configure
+```
+
+2. Build for development
+
+```bash
+# iOS development client
+eas build --profile development --platform ios
+
+# Android development client
+eas build --profile development --platform android
+```
+
+3. Build for production
+
+```bash
+# iOS
+eas build --platform ios
+
+# Android
+eas build --platform android
+```
+
+4. Submit to stores
+
+```bash
+# iOS App Store
+eas submit --platform ios
+
+# Google Play Store
+eas submit --platform android
+```
+
+## Key Features
+
+- Credential issuance and verification
+- Secure credential storage and management
+- VC Verification via Proximity(NFC/BLE) connection
+
+## Troubleshooting
+
+1. Reset Metro bundler cache
+
+```bash
+pnpm reset-project
+```
+
+2. Development client issues
+
+```bash
+# Rebuild development client
+eas build --profile development --platform ios
+eas build --profile development --platform android
+```
+
+3. Clean build files
+
+```bash
+# iOS
+cd ios
+pod deintegrate
+pod install
+cd ..
+
+# Android
+cd android
+./gradlew clean
+cd ..
+```
+
+## Technical Stack
+
+- Expo SDK 53
+- React Native 0.79.2
+- BLE Communication (react-native-ble-plx)
+- NFC Communication (react-native-nfc-manager)
+- Secure Storage (expo-secure-store)
+- Credential Management (@hDCX/wallet-core)
+
+## Project Structure
+
+```
+├── app/                 # Expo Router app directory
+├── components/          # Reusable components
+├── contexts/           # React contexts
+├── hooks/              # Custom React hooks
+├── sdk/                # Wallet SDK implementation
+├── types/              # TypeScript type definitions
+└── utils/              # Utility functions
+```
+
+## Environment Setup
+
+The app requires specific environment variables for different environments. Create the following files:
+
+- `.env.development` - Development environment variables
+- `.env.staging` - Staging environment variables
+- `.env.production` - Production environment variables
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
