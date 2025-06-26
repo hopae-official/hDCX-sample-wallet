@@ -1,12 +1,13 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@/components/ui/button";
 import Carousel, { Pagination } from "react-native-reanimated-carousel";
@@ -18,17 +19,83 @@ import { useVerificationFlow } from "@/hooks/useCredentialVerification";
 import { FullscreenLoader } from "@/components/FullscreenLoader";
 import { ClaimSelector } from "@/components/ClaimSelector";
 import { useClaimSelector } from "@/hooks/useClaimSelector";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { useWallet } from "@/contexts/WalletContext";
+import { StoredCredential } from "@/types";
+import { RequestObject } from "dvlprsh-wallet-core-test";
 
 export default function CredentialPresentationScreen() {
+  const walletSDK = useWallet();
   const { requestUri } = useLocalSearchParams<{ requestUri: string }>();
+  const [requestObject, setRequestObject] = useState<RequestObject>();
 
-  const {
-    isLoading: isVerificationLoading,
-    loadRequestObject,
-    loadCredentials,
-    presentCredential,
-    REQUIRED_CLAIMS,
-  } = useVerificationFlow(requestUri);
+  const { isLoading: isVerificationLoading, withLoading } = useAsyncAction({
+    errorTitle: "Load Request Error",
+  });
+
+  const loadRequestObject = useCallback(async () => {
+    if (!requestUri) {
+      throw new Error("Cannot load request object: Missing request URI");
+    }
+
+    return withLoading(async () => {
+      const reqObject = await walletSDK.load(requestUri);
+      setRequestObject(reqObject);
+      return { isSuccess: true };
+    }, "Failed to load request object");
+  }, [requestUri, walletSDK, withLoading]);
+
+  const loadCredentials = useCallback(async () => {
+    if (!requestObject) return [];
+
+    try {
+      const storedCredentials = await walletSDK.selectCredentials();
+      return storedCredentials ? JSON.parse(storedCredentials) : [];
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load credentials";
+      Alert.alert("Error:", errorMessage);
+      return [];
+    }
+  }, [requestObject, walletSDK]);
+
+  const presentCredential = useCallback(
+    async (
+      credential: StoredCredential
+    ): Promise<{
+      isSuccess: boolean;
+      error?: string;
+    }> => {
+      if (!walletSDK || !credential?.raw || !requestObject)
+        throw new Error(
+          "Cannot present credential: Missing required data. Please ensure wallet is initialized and credential is valid."
+        );
+
+      try {
+        const result = await walletSDK.present(
+          credential.raw,
+          PRESENTATION_FRAME,
+          requestObject
+        );
+
+        return {
+          isSuccess: !!result,
+        };
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to verify credential";
+
+        Alert.alert("Error:", errorMessage);
+        return {
+          isSuccess: false,
+          error: errorMessage,
+        };
+      }
+    },
+    [walletSDK, requestObject]
+  );
 
   const {
     credentials,
@@ -209,3 +276,15 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
 });
+
+const REQUIRED_CLAIMS = ["iss", "vct"] as const;
+const PRESENTATION_FRAME = {
+  family_name: true,
+  given_name: true,
+  birth_date: true,
+  age_over_18: true,
+  issuance_date: true,
+  expiry_date: true,
+  issuing_country: true,
+  issuing_authority: true,
+} as const;

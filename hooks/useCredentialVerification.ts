@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { Alert } from "react-native";
 import { RequestObject, StoredCredential } from "@/types";
 import { useWallet } from "@/contexts/WalletContext";
+import { useAsyncAction } from "./useAsyncAction";
 
 const REQUIRED_CLAIMS = ["iss", "vct"] as const;
 const PRESENTATION_FRAME = {
@@ -18,38 +19,22 @@ const PRESENTATION_FRAME = {
 export function useVerificationFlow(requestUri?: string) {
   const walletSDK = useWallet();
   const [requestObject, setRequestObject] = useState<RequestObject>();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const loadRequestObject = useCallback(async (): Promise<{
-    isSuccess: boolean;
-  }> => {
-    if (!requestUri)
+  const { isLoading, withLoading } = useAsyncAction({
+    errorTitle: "Load Request Error",
+  });
+
+  const loadRequestObject = useCallback(async () => {
+    if (!requestUri) {
       throw new Error("Cannot load request object: Missing request URI");
-
-    try {
-      setIsLoading(true);
-
-      const reqObject = await walletSDK.load(requestUri);
-
-      setRequestObject(reqObject);
-
-      return {
-        isSuccess: true,
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to load request object";
-      Alert.alert("Error:", errorMessage);
-
-      return {
-        isSuccess: false,
-      };
-    } finally {
-      setIsLoading(false);
     }
-  }, [requestUri, walletSDK]);
+
+    return withLoading(async () => {
+      const reqObject = await walletSDK.load(requestUri);
+      setRequestObject(reqObject);
+      return { isSuccess: true };
+    }, "Failed to load request object");
+  }, [requestUri, walletSDK, withLoading]);
 
   const loadCredentials = useCallback(async () => {
     if (!requestObject) return [];
