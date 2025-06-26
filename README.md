@@ -7,8 +7,7 @@ A React Native digital credential wallet app built with Expo and [`@hDCX/wallet-
 - Node.js 18 or later
 - pnpm 8 or later
 - Expo CLI (`pnpm install -g expo-cli`)
-- Expo EAS CLI (`pnpm install -g eas-cli`)
-- Expo account (for EAS builds)
+- Expo Development Build mode [Docs](https://docs.expo.dev/get-started/set-up-your-environment/?mode=development-build&platform=ios&device=physical&buildEnv=local)
 - Physical iOS/Android device for testing BLE and NFC features
 
 ## Installation
@@ -20,13 +19,15 @@ git clone https://github.com/hopae-official/hDCX-sample-wallet.git
 cd hDCX-sample-wallet
 ```
 
-2. Install pnpm (if not installed)
+2. Setup environment as Expo `Development build` mode [Docs](https://docs.expo.dev/get-started/set-up-your-environment/?mode=development-build&platform=ios&device=physical&buildEnv=local)
+
+3. Install pnpm (if not installed)
 
 ```bash
 npm install -g pnpm
 ```
 
-3. Install dependencies
+4. Install dependencies
 
 ```bash
 pnpm install
