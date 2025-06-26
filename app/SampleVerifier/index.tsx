@@ -146,18 +146,14 @@ export default function SampleVerifierScreen() {
                       }
 
                       if (jsonData.type === "vp_token") {
-                        logger.log("Presentation received:", jsonData);
-
                         if (!requestObject.current) {
                           logger.error("Request object is undefined");
                           return;
                         }
 
+                        const vpToken = jsonData.value;
                         const client = new Oid4VpClient(requestObject.current);
-                        console.log("jsonData.value", jsonData.value);
-                        const result = await client.sendPresentation(
-                          JSON.parse(jsonData.value)
-                        );
+                        const result = await client.sendPresentation(vpToken);
 
                         if (!result) {
                           logger.error("Presentation failed");

@@ -66,8 +66,8 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
       dvlprsh-wallet-core-test:
-        specifier: ^0.1.21
-        version: 0.1.21(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-nfc-manager@3.16.1)
+        specifier: ^0.1.25
+        version: 0.1.25(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-ble-plx@3.5.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-nfc-manager@3.16.1)
       expo:
         specifier: ~53.0.0
         version: 53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -2120,10 +2120,11 @@ packages:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
 
-  dvlprsh-wallet-core-test@0.1.21:
-    resolution: {integrity: sha512-qQPNwR+V/YlKFU1uEfWxUGHG96BWLxfjadshOABerJi3FVqdV801J3GKtMWriHQ+H4bcID+AI/wHkF/ftVwZNA==}
+  dvlprsh-wallet-core-test@0.1.25:
+    resolution: {integrity: sha512-UNCJl++G4CRoY3Y4mTZqGO2O+2a2vbeo/4CRjLDRzaTsHUPSALIVNc9DjUmr6pRFALTO3O8MIJnfUob+2sFNfQ==}
     engines: {node: '>=18'}
     peerDependencies:
+      react-native-ble-plx: ^3.5.0
       react-native-nfc-manager: ^3.16.1
 
   eastasianwidth@0.2.0:
@@ -7135,7 +7136,7 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  dvlprsh-wallet-core-test@0.1.21(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-nfc-manager@3.16.1):
+  dvlprsh-wallet-core-test@0.1.25(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-ble-plx@3.5.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-nfc-manager@3.16.1):
     dependencies:
       '@noble/curves': 1.9.2
       '@noble/hashes': 1.8.0
@@ -7145,13 +7146,15 @@ snapshots:
       '@sd-jwt/present': 0.10.0
       '@sd-jwt/types': 0.10.0
       '@sd-jwt/utils': 0.10.0
-      '@vdcs/dcql': 0.1.8
+      '@vdcs/dcql': 0.1.9
       '@vdcs/jwt': 0.1.9
       '@vdcs/oid4vci': 0.1.9
       '@vdcs/oid4vci-client': 0.1.9
       '@vdcs/oid4vp-client': 0.1.9
       expo-crypto: 14.1.5(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
       expo-secure-store: 14.2.3(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))
+      react-native-base64: 0.2.1
+      react-native-ble-plx: 3.5.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native-nfc-manager: 3.16.1
       uuid: 11.1.0
     transitivePeerDependencies:

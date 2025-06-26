@@ -45,7 +45,7 @@ export default function HomeScreen() {
 
   const handleScanTag = async () => {
     const result = await walletSDK.nfcService.readNdef();
-
+    console.log("result ******", result);
     if (!result) return;
 
     const verifyRegex = /request_uri=([^&]*)/;
