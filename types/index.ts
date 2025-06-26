@@ -63,3 +63,9 @@ export type RequestObject = {
   dcql_query: rawDCQL;
   state?: string;
 };
+
+export type AnimoCredentialResponse = {
+  credential: string;
+};
+
+export type CredentialClaims = Record<string, string>;

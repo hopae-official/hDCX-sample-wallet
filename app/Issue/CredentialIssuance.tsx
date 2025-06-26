@@ -10,18 +10,54 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Card } from "@/components/ui/card";
 import { Colors } from "@/constants/Colors";
 import { Button } from "@/components/ui/button";
-import { useCredentialIssuanceFlow } from "@/hooks/useCredentialIssuanceFlow";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FullscreenLoader } from "@/components/FullscreenLoader";
 import { CredentialInfo } from "@/components/CredentialInfo";
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { AnimoCredentialResponse, CredentialClaims } from "@/types";
+import { useWallet } from "@/contexts/WalletContext";
+import { getCredentialClaims } from "@/utils";
 
 export default function CredentialIssuanceScreen() {
+  const walletSDK = useWallet();
   const { credentialOfferUri } = useLocalSearchParams<{
     credentialOfferUri: string;
   }>();
 
-  const { isLoading, claims, saveCredential, receiveCredential } =
-    useCredentialIssuanceFlow(credentialOfferUri);
+  const [credential, setCredential] = useState<string | null>(null);
+  const { isLoading, withLoading } = useAsyncAction({
+    errorTitle: "Credential Issuance Error",
+  });
+
+  const claims = credential
+    ? (getCredentialClaims({
+        credential,
+        format: "dc+sd-jwt",
+      }) as CredentialClaims)
+    : null;
+
+  const receiveCredential = useCallback(
+    async (credentialOfferUri: string) => {
+      return withLoading(async () => {
+        const { credential } = (await walletSDK.receive(
+          credentialOfferUri
+        )) as unknown as AnimoCredentialResponse;
+
+        setCredential(credential);
+        return { isSuccess: true };
+      });
+    },
+    [credentialOfferUri, walletSDK, withLoading]
+  );
+
+  const saveCredential = useCallback(async () => {
+    if (!credential) return;
+
+    return withLoading(async () => {
+      await walletSDK.save({ credential, format: "dc+sd-jwt" });
+      return { isSuccess: true };
+    });
+  }, [credential, walletSDK, withLoading]);
 
   useEffect(() => {
     if (!credentialOfferUri) return;
