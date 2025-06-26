@@ -16,7 +16,6 @@ import {
 
 import Peripheral, { Characteristic, Service } from "react-native-peripheral";
 import base64 from "react-native-base64";
-import { writeNdef } from "@/utils/nfc";
 import logger from "@/utils/logger";
 import { useWallet } from "@/contexts/WalletContext";
 import { RequestObject } from "@/types";
@@ -172,7 +171,7 @@ export default function SampleVerifierScreen() {
                           })
                         );
 
-                        setStep(3)
+                        setStep(3);
                       }
                     }
                   } catch (parseError) {
@@ -248,8 +247,7 @@ export default function SampleVerifierScreen() {
     if (!requestUri) return;
 
     try {
-      const result = await writeNdef(requestUri);
-
+      const result = await walletSDK.nfcService.writeNdef(requestUri);
       if (!result) {
         Alert.alert("Failed to write NFC tag");
       } else {

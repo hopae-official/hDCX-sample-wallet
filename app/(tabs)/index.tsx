@@ -1,9 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useCallback } from "react";
@@ -14,7 +9,6 @@ import { Claim } from "@/types";
 import { useWallet } from "@/contexts/WalletContext";
 import logger from "../../utils/logger";
 import { CredentialCard } from "@/components/CredentialCard";
-import { readNdef } from "@/utils/nfc";
 
 export default function HomeScreen() {
   const walletSDK = useWallet();
@@ -50,7 +44,8 @@ export default function HomeScreen() {
   };
 
   const handleScanTag = async () => {
-    const result = await readNdef();
+    const result = await walletSDK.nfcService.readNdef();
+
     if (!result) return;
 
     const verifyRegex = /request_uri=([^&]*)/;
