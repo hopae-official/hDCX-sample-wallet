@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { Alert, Platform } from "react-native";
-import { BleManager, Device } from "react-native-ble-plx";
+import { useEffect, useState } from "react";
+import { Device } from "react-native-ble-plx";
+import { BleSdk } from "@/sdk/BleSdk";
 import logger from "@/utils/logger";
 import { useWallet } from "@/contexts/WalletContext";
 
-const bleManager = new BleManager();
-const DEVICE_NAME = "HDCXWallet";
+const SERVICE_UUID = "4FAFC201-1FB5-459E-8FCC-C5C9C331914B";
+const CHARACTERISTIC_UUID = "BEB5483E-36E1-4688-B7F5-EA07361B26A8";
 
 interface UseBleConnectionProps {
   onReceiveRequestObject: (value: any) => void;
@@ -16,176 +16,85 @@ export function useBleConnection({
   onReceiveRequestObject,
   onReceivePresentationResult,
 }: UseBleConnectionProps) {
+  const walletSDK = useWallet();
   const [isScanning, setIsScanning] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<Device | null>(null);
-  const [subscription, setSubscription] = useState<any>(null);
-  const isSubscriptionActive = useRef(true);
-
-  const walletSDK = useWallet();
 
   useEffect(() => {
-    const requestPermissions = async () => {
-      if (Platform.OS === "ios") {
-        const status = await bleManager.state();
-        if (status === "PoweredOff") {
-          Alert.alert("Bluetooth is powered off", "Please enable Bluetooth");
-          return;
-        }
+    const init = async () => {
+      const isEnabled = await walletSDK.bleService.checkPermissions();
+      if (!isEnabled) {
+        logger.error("Bluetooth is not enabled");
+        return;
       }
-    };
 
-    requestPermissions();
-    return () => {
-      bleManager.destroy();
-    };
-  }, []);
-
-  useEffect(() => {
-    const startScanning = async () => {
-      if (isScanning) return;
+      walletSDK.bleService.setConnectionStatusCallback((status, device) => {
+        setIsScanning(status === "scanning");
+        if (status === "connected" && device) {
+          setConnectedDevice(device);
+          // Send initial ack when connected
+          walletSDK.bleService
+            .sendData(JSON.stringify({ type: "ack" }))
+            .catch((error) => {
+              logger.error("Failed to send ack:", error);
+            });
+        } else if (status === "disconnected") {
+          setConnectedDevice(null);
+        }
+      });
 
       try {
-        setIsScanning(true);
-        const status = await bleManager.state();
-
-        if (status !== "PoweredOn") {
-          logger.error("Bluetooth is powered off, please enable Bluetooth");
-          setIsScanning(false);
-          return;
-        }
-
-        bleManager.startDeviceScan(null, null, async (error, device) => {
-          if (error) {
-            logger.error("Scanning error:", error);
-            setIsScanning(false);
-            return;
-          }
-
-          if (device?.localName === DEVICE_NAME && device.isConnectable) {
-            await connectToDevice(device);
-            bleManager.stopDeviceScan();
-            setIsScanning(false);
-          }
+        await walletSDK.bleService.scanAndConnect({
+          serviceUUID: SERVICE_UUID,
+          characteristicUUID: CHARACTERISTIC_UUID,
         });
-
-        // Stop scanning after 10 seconds
-        setTimeout(() => {
-          bleManager.stopDeviceScan();
-          setIsScanning(false);
-        }, 10000);
       } catch (error) {
-        logger.error("Scan error:", error);
-        setIsScanning(false);
+        logger.error("BLE operation failed:", error);
       }
     };
 
-    startScanning();
+    init();
+
+    return () => {
+      walletSDK.bleService.destroy();
+    };
   }, []);
 
   useEffect(() => {
-    isSubscriptionActive.current = true;
-
-    return () => {
-      isSubscriptionActive.current = false;
-      if (subscription) {
-        subscription.remove();
-        setSubscription(null);
-        setConnectedDevice(null);
-        logger.log("Characteristic monitoring subscription cleaned up");
-      }
-    };
-  }, [subscription]);
-
-  useEffect(() => {
-    if (connectedDevice && subscription) {
-      logger.log("Device connected, sending ack");
-      sendDataViaBLE(JSON.stringify({ type: "ack" }));
-    }
-  }, [connectedDevice, subscription]);
-
-  useEffect(() => {
-    if (!connectedDevice && subscription) {
-      subscription.remove();
-      setSubscription(null);
-      logger.log("Subscription removed due to device disconnection");
-    }
-  }, [connectedDevice, subscription]);
-
-  const connectToDevice = async (device: Device) => {
-    try {
-      logger.log("Connecting to device:", device.name);
-      const connectedDevice = await device.connect();
-      setConnectedDevice(connectedDevice);
-
-      logger.log("Discovering services and characteristics");
-      const discoveredDevice =
-        await connectedDevice.discoverAllServicesAndCharacteristics();
-
-      setupCharacteristicMonitoring(discoveredDevice);
-      logger.log("Connected to device");
-    } catch (error) {
-      logger.error("Connection error:", error);
-      Alert.alert("Error", "Failed to connect to device");
-    }
-  };
-
-  const setupCharacteristicMonitoring = async (discoveredDevice: Device) => {
-    try {
-      const newSubscription = walletSDK.bleService.monitorCharacteristic(
-        discoveredDevice,
-        (error, data) => {
-          if (!isSubscriptionActive.current) {
-            return;
-          }
-
-          if (error) {
-            if (error.message?.includes("Peripheral Disconnected")) {
-              logger.error("Device disconnected:", error);
-              setSubscription(null);
-              setConnectedDevice(null);
-              Alert.alert(
-                "Connection Lost",
-                "Device connection was lost. Please try reconnecting."
-              );
-            } else {
-              logger.error("Monitoring stopped:", error);
-            }
-            return;
-          }
-
-          if (!data) {
-            logger.log("No data received");
-            return;
-          }
-
-          try {
-            if (data.trim().startsWith("{") || data.trim().startsWith("[")) {
-              const jsonData = JSON.parse(data);
-
-              if (jsonData.type === "request_object") {
-                onReceiveRequestObject(jsonData.value);
-              }
-
-              if (jsonData.type === "presentation_result") {
-                onReceivePresentationResult();
-              }
-            }
-          } catch (error) {
-            logger.error("Error processing data:", error);
-          }
+    if (connectedDevice) {
+      walletSDK.bleService.monitorCharacteristic((error, data) => {
+        if (error) {
+          logger.error("Monitoring error:", error);
+          return;
         }
-      );
 
-      setSubscription(newSubscription);
-      logger.log("Characteristic monitoring subscription created");
-    } catch (error) {
-      logger.error("Failed to setup characteristic monitoring:", error);
+        if (!data) return;
+
+        try {
+          if (data.trim().startsWith("{") || data.trim().startsWith("[")) {
+            const jsonData = JSON.parse(data);
+
+            if (jsonData.type === "request_object") {
+              onReceiveRequestObject(jsonData.value);
+            }
+
+            if (jsonData.type === "presentation_result") {
+              onReceivePresentationResult();
+            }
+          }
+        } catch (error) {
+          logger.error("Error processing data:", error);
+        }
+      });
     }
-  };
+  }, [connectedDevice]);
 
   const sendDataViaBLE = async (data: string) => {
-    if (!connectedDevice) return;
-    await walletSDK.bleService.sendData(connectedDevice, data);
+    try {
+      await walletSDK.bleService.sendData(data);
+    } catch (error) {
+      logger.error("Failed to send data:", error);
+    }
   };
 
   return {
