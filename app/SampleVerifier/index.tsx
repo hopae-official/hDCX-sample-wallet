@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import {
+  router,
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+} from "expo-router";
 import { useCallback, useEffect, useState, useRef } from "react";
 import {
   Text,
@@ -21,6 +26,9 @@ import { useWallet } from "@/contexts/WalletContext";
 import { RequestObject } from "@/types";
 import { Oid4VpClient } from "@vdcs/oid4vp-client";
 import LottieView from "lottie-react-native";
+import { RASPBERRY_PI_DEMO_KEY } from "../(tabs)/settings";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 const SERVICE_UUID = "4FAFC201-1FB5-459E-8FCC-C5C9C331914B";
 const CHARACTERISTIC_UUID = "BEB5483E-36E1-4688-B7F5-EA07361B26A8";
@@ -218,6 +226,30 @@ export default function SampleVerifierScreen() {
       setBleState("disconnected");
     };
   }, []);
+
+  const [isRaspberryPiDemo, setIsRaspberryPiDemo] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Load Raspberry Pi demo mode state
+      AsyncStorage.getItem(RASPBERRY_PI_DEMO_KEY).then((value) => {
+        setIsRaspberryPiDemo(value === "true");
+      });
+    }, [])
+  );
+
+  useEffect(() => {
+    (async function openDoor() {
+      if (step !== 3 || !isRaspberryPiDemo) return;
+
+      try {
+        const rasberryPiUrl = process.env.EXPO_PUBLIC_RASPBERRY_PI_URL;
+        await axios.post(`${rasberryPiUrl}/door/open`);
+      } catch (e) {
+        logger.error(e);
+      }
+    })();
+  }, [step, isRaspberryPiDemo]);
 
   const sendDataFromPeripheral = async (data: string) => {
     try {
