@@ -11,7 +11,7 @@ export function useCredentialCarousel() {
   const carouselRef = useRef<ICarouselInstance>(null);
   const progress = useSharedValue<number>(0);
 
-  const selectedCredential = credentials?.[currentIndex] ?? null;
+  const selectedCredential = credentials ? credentials[currentIndex] : null;
 
   const onPressPagination = (index: number) => {
     carouselRef.current?.scrollTo({

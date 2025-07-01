@@ -5,7 +5,7 @@ import { Text, View, StyleSheet } from "react-native";
 
 export default function ProximityScreen() {
   const { requestUri } = useLocalSearchParams<{ requestUri: string }>();
-  console.log('requestUri', requestUri)
+
   const handleClickNetwork = () => {
     router.push({
       pathname: "/Verify/CredentialPresentation",

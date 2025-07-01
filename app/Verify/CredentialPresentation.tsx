@@ -30,7 +30,14 @@ export default function CredentialPresentationScreen() {
   const [requestObject, setRequestObject] = useState<RequestObject>();
   const [requiredClaims, setRequiredClaims] = useState<string[]>([]);
 
-  const { isLoading: isVerificationLoading, withLoading } = useAsyncAction({
+  const {
+    isLoading: isVerificationLoading,
+    withLoading: withVerificationLoading,
+  } = useAsyncAction({
+    errorTitle: "Verification Error",
+  });
+
+  const { isLoading, withLoading } = useAsyncAction({
     errorTitle: "Load Request Error",
   });
 
@@ -77,8 +84,6 @@ export default function CredentialPresentationScreen() {
     onPressPagination,
   } = useCredentialCarousel();
 
-  const isLoading = !selectedCredential;
-
   const { selectedOptions, toggleOption } = useClaimSelector(
     selectedCredential,
     requiredClaims
@@ -113,30 +118,32 @@ export default function CredentialPresentationScreen() {
           "Cannot present credential: Missing required data. Please ensure wallet is initialized and credential is valid."
         );
 
-      try {
-        const result = await walletSDK.present(
-          credential.raw,
-          selectedOptions,
-          requestObject
-        );
+      return withVerificationLoading(async () => {
+        try {
+          const result = await walletSDK.present(
+            credential.raw,
+            selectedOptions,
+            requestObject
+          );
 
-        return {
-          isSuccess: !!result,
-        };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Failed to verify credential";
+          return {
+            isSuccess: !!result,
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Failed to verify credential";
 
-        Alert.alert("Error:", errorMessage);
-        return {
-          isSuccess: false,
-          error: errorMessage,
-        };
-      }
+          Alert.alert("Error:", errorMessage);
+          return {
+            isSuccess: false,
+            error: errorMessage,
+          };
+        }
+      });
     },
-    [walletSDK, requestObject, selectedOptions]
+    [walletSDK, requestObject, selectedOptions, withVerificationLoading]
   );
 
   const handlePressPresent = async () => {
@@ -167,7 +174,14 @@ export default function CredentialPresentationScreen() {
           headerShown: !isLoading,
         }}
       />
-      <FullscreenLoader isLoading={isLoading}>
+      <FullscreenLoader
+        isLoading={isLoading || isVerificationLoading}
+        message={
+          isVerificationLoading
+            ? "Verifying your credential..."
+            : "Loading credentials..."
+        }
+      >
         <ScrollView
           style={styles.container}
           contentContainerStyle={styles.scrollViewContent}
@@ -218,6 +232,7 @@ export default function CredentialPresentationScreen() {
               variant="default"
               style={styles.acceptButton}
               onPress={handlePressPresent}
+              disabled={isVerificationLoading}
             >
               <Text style={styles.acceptButtonText}>Present</Text>
             </Button>

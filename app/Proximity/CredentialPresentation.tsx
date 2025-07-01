@@ -21,18 +21,8 @@ import { useBleConnection } from "@/hooks/useBleConnection";
 import logger from "@/utils/logger";
 import { RequestObject } from "@hdcx/wallet-core";
 import { getRequiredClaimsFromDCQL } from "@/utils/dcql";
-
-const REQUIRED_CLAIMS = ["iss", "vct"] as const;
-const PRESENTATION_FRAME = {
-  family_name: true,
-  given_name: true,
-  birth_date: true,
-  age_over_18: true,
-  issuance_date: true,
-  expiry_date: true,
-  issuing_country: true,
-  issuing_authority: true,
-} as const;
+import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { FullscreenLoader } from "@/components/FullscreenLoader";
 
 export default function ProximityCredentialPresentationScreen() {
   const walletSDK = useWallet();
@@ -56,6 +46,13 @@ export default function ProximityCredentialPresentationScreen() {
     requiredClaims
   );
 
+  const {
+    isLoading: isVerificationLoading,
+    withLoading: withVerificationLoading,
+  } = useAsyncAction({
+    errorTitle: "Verification Error",
+  });
+
   const { connectedDevice } = useBleConnection({
     onReceiveRequestObject: (value) => setRequestObject(value),
     onReceivePresentationResult: () => router.replace("/Verify/VerifyResult"),
@@ -78,16 +75,27 @@ export default function ProximityCredentialPresentationScreen() {
   const handlePressPresent = async () => {
     if (!selectedCredential || !requestObject || !connectedDevice) return;
 
-    try {
-      await walletSDK.bleService.present(
-        connectedDevice,
-        selectedCredential.raw,
-        selectedOptions,
-        requestObject
-      );
-    } catch (e) {
-      logger.error("Error presenting credential:", e);
-    }
+    await withVerificationLoading(async () => {
+      try {
+        await walletSDK.bleService.present(
+          connectedDevice,
+          selectedCredential.raw,
+          selectedOptions,
+          requestObject
+        );
+
+        return { isSuccess: true };
+      } catch (error) {
+        logger.error("Error presenting credential:", error);
+        return {
+          isSuccess: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to present credential",
+        };
+      }
+    });
   };
 
   const handlePressDeny = () => {
@@ -107,69 +115,73 @@ export default function ProximityCredentialPresentationScreen() {
           ),
         }}
       />
-
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollViewContent}
-        bounces={false}
+      <FullscreenLoader
+        isLoading={isVerificationLoading}
+        message={"Verifying your credential..."}
       >
-        <Text style={styles.title}>
-          An organization is asking for information
-        </Text>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollViewContent}
+          bounces={false}
+        >
+          <Text style={styles.title}>
+            An organization is asking for information
+          </Text>
 
-        <View style={styles.carouselContainer}>
-          <Carousel
-            ref={carouselRef}
-            style={styles.carousel}
-            width={310}
-            height={300}
-            data={credentials ?? []}
-            loop={false}
-            onProgressChange={progress}
-            onScrollEnd={setCurrentIndex}
-            snapEnabled={true}
-            renderItem={({ item }) => <CredentialCard issuer={item.iss} />}
-          />
-          <Pagination.Basic
-            progress={progress}
-            data={credentials ?? []}
-            dotStyle={{
-              backgroundColor: "rgba(0,0,0,0.2)",
-              borderRadius: 50,
-            }}
-            containerStyle={{ gap: 5, marginTop: 10 }}
-            onPress={onPressPagination}
-          />
-        </View>
+          <View style={styles.carouselContainer}>
+            <Carousel
+              ref={carouselRef}
+              style={styles.carousel}
+              width={310}
+              height={300}
+              data={credentials ?? []}
+              loop={false}
+              onProgressChange={progress}
+              onScrollEnd={setCurrentIndex}
+              snapEnabled={true}
+              renderItem={({ item }) => <CredentialCard issuer={item.iss} />}
+            />
+            <Pagination.Basic
+              progress={progress}
+              data={credentials ?? []}
+              dotStyle={{
+                backgroundColor: "rgba(0,0,0,0.2)",
+                borderRadius: 50,
+              }}
+              containerStyle={{ gap: 5, marginTop: 10 }}
+              onPress={onPressPagination}
+            />
+          </View>
 
-        <ProviderInfo issuer={selectedCredential?.iss ?? ""} />
+          <ProviderInfo issuer={selectedCredential?.iss ?? ""} />
 
-        <View style={styles.dataInfoContainer}>
-          <ClaimSelector
-            credential={selectedCredential}
-            selectedOptions={selectedOptions}
-            onToggleOption={toggleOption}
-            requiredClaims={requiredClaims}
-          />
-        </View>
+          <View style={styles.dataInfoContainer}>
+            <ClaimSelector
+              credential={selectedCredential}
+              selectedOptions={selectedOptions}
+              onToggleOption={toggleOption}
+              requiredClaims={requiredClaims}
+            />
+          </View>
 
-        <View style={styles.buttonWrapper}>
-          <Button
-            variant="default"
-            style={styles.acceptButton}
-            onPress={handlePressPresent}
-          >
-            <Text style={styles.acceptButtonText}>Present</Text>
-          </Button>
-          <Button
-            variant="default"
-            style={styles.denyButton}
-            onPress={handlePressDeny}
-          >
-            <Text>Cancel</Text>
-          </Button>
-        </View>
-      </ScrollView>
+          <View style={styles.buttonWrapper}>
+            <Button
+              variant="default"
+              style={styles.acceptButton}
+              onPress={handlePressPresent}
+            >
+              <Text style={styles.acceptButtonText}>Present</Text>
+            </Button>
+            <Button
+              variant="default"
+              style={styles.denyButton}
+              onPress={handlePressDeny}
+            >
+              <Text>Cancel</Text>
+            </Button>
+          </View>
+        </ScrollView>
+      </FullscreenLoader>
     </>
   );
 }
