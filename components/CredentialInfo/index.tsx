@@ -11,10 +11,66 @@ type CredentialInfoProps = {
   style?: any;
 };
 
+const NestedValue = ({
+  data,
+  path = "",
+  excludeKeys,
+}: {
+  data: unknown;
+  path?: string;
+  excludeKeys: string[];
+}) => {
+  if (typeof data === "object" && !Array.isArray(data)) {
+    return (
+      <View style={path ? styles.nestedContainer : undefined}>
+        {Object.entries(data as Record<string, unknown>).map(([key, value]) => {
+          if (excludeKeys.includes(key)) return null;
+          if (typeof value === "string" && value.startsWith("data:image"))
+            return null;
+
+          const fullPath = path ? `${path}.${key}` : key;
+          return (
+            <View key={fullPath}>
+              <Text style={[styles.infoLabelText, styles.nestedLabel]}>
+                {toPascalCase(key)}
+              </Text>
+              <NestedValue
+                data={value}
+                path={fullPath}
+                excludeKeys={excludeKeys}
+              />
+            </View>
+          );
+        })}
+      </View>
+    );
+  }
+
+  if (Array.isArray(data)) {
+    return (
+      <View style={styles.infoRow}>
+        <Text style={styles.infoText}>
+          {data
+            .map((item) =>
+              typeof item === "object" ? JSON.stringify(item) : String(item)
+            )
+            .join(", ")}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoText}>{String(data)}</Text>
+    </View>
+  );
+};
+
 export const CredentialInfo = ({
   claims,
   title = "Credential Information",
-  excludeKeys = ["raw"],
+  excludeKeys = ["raw", "cnf"],
   style,
 }: CredentialInfoProps) => {
   const portraitImage = claims.portrait;
@@ -54,22 +110,7 @@ export const CredentialInfo = ({
           </View>
         )}
         {renderNameSection()}
-        {Object.entries(claims)
-          .filter(([key, value]) => {
-            if (typeof value !== "string" && typeof value !== "number")
-              return false;
-            if (excludeKeys.includes(key)) return false;
-
-            return !(
-              typeof value === "string" && value.startsWith("data:image")
-            );
-          })
-          .map(([key, value]) => (
-            <View key={key} style={styles.infoRow}>
-              <Text style={styles.infoLabelText}>{toPascalCase(key)}</Text>
-              <Text style={styles.infoText}>{value.toString()}</Text>
-            </View>
-          ))}
+        <NestedValue data={claims} excludeKeys={excludeKeys} />
       </View>
     </View>
   );
@@ -128,6 +169,21 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontSize: 15,
+    color: Colors.light.text,
+  },
+  nestedContainer: {
+    marginLeft: 10,
+    borderLeftWidth: 1,
+    borderLeftColor: Colors.light.border,
+    paddingLeft: 10,
+    marginVertical: 4,
+  },
+  nestedLabel: {
+    marginTop: 8,
+    marginBottom: 4,
+    color: Colors.light.text,
+  },
+  nestedValue: {
     color: Colors.light.text,
   },
 });
