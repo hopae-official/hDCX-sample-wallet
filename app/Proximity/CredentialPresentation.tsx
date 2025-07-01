@@ -17,9 +17,9 @@ import { useCredentialCarousel } from "@/hooks/useCredentialCarousel";
 import { ClaimSelector } from "@/components/ClaimSelector";
 import { useClaimSelector } from "@/hooks/useClaimSelector";
 import { useWallet } from "@/contexts/WalletContext";
-import { RequestObject } from "@/types";
 import { useBleConnection } from "@/hooks/useBleConnection";
 import logger from "@/utils/logger";
+import { RequestObject } from "@hdcx/wallet-core";
 
 const REQUIRED_CLAIMS = ["iss", "vct"] as const;
 const PRESENTATION_FRAME = {
@@ -196,6 +196,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     flex: 1,
+    marginTop: 20,
   },
   buttonWrapper: {
     marginVertical: 30,

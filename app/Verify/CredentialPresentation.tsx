@@ -257,6 +257,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     flex: 1,
+    marginTop: 20,
   },
   buttonWrapper: {
     marginVertical: 30,
