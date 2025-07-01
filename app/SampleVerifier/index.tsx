@@ -23,7 +23,7 @@ import Peripheral, { Characteristic, Service } from "react-native-peripheral";
 import base64 from "react-native-base64";
 import logger from "@/utils/logger";
 import { useWallet } from "@/contexts/WalletContext";
-import { RequestObject } from "@/types";
+import { RequestObject } from "@hdcx/wallet-core";
 import { Oid4VpClient } from "@vdcs/oid4vp-client";
 import LottieView from "lottie-react-native";
 import { RASPBERRY_PI_DEMO_KEY } from "../(tabs)/settings";
@@ -250,22 +250,6 @@ export default function SampleVerifierScreen() {
       }
     })();
   }, [step, isRaspberryPiDemo]);
-
-  const sendDataFromPeripheral = async (data: string) => {
-    try {
-      console.log("Starting sendDataFromPeripheral with data:", data);
-
-      if (!peripheralChar) {
-        console.error(" No peripheral characterstic found");
-        return;
-      }
-
-      const encodedData = base64.encode(data);
-      await peripheralChar.notify(encodedData);
-    } catch (error) {
-      console.error(" Error in sendDataFromPeripheral:", error);
-    }
-  };
 
   const handlePressQRScanButton = () => {
     router.replace("/SampleVerifier/QR");

@@ -15,14 +15,13 @@ import { Colors } from "@/constants/Colors";
 import { CredentialCard } from "@/components/CredentialCard";
 import { ProviderInfo } from "@/components/ProviderInfo";
 import { useCredentialCarousel } from "@/hooks/useCredentialCarousel";
-import { useVerificationFlow } from "@/hooks/useCredentialVerification";
 import { FullscreenLoader } from "@/components/FullscreenLoader";
 import { ClaimSelector } from "@/components/ClaimSelector";
 import { useClaimSelector } from "@/hooks/useClaimSelector";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { useWallet } from "@/contexts/WalletContext";
 import { StoredCredential } from "@/types";
-import { RequestObject } from "dvlprsh-wallet-core-test";
+import { RequestObject } from "@hdcx/wallet-core";
 
 export default function CredentialPresentationScreen() {
   const walletSDK = useWallet();

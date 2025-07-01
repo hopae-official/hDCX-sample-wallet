@@ -1,4 +1,4 @@
-import { ExpoSecureStore, WalletSDK } from "dvlprsh-wallet-core-test";
+import { ExpoSecureStore, WalletSDK } from "@hdcx/wallet-core";
 import { createContext, useContext, ReactNode } from "react";
 
 const jwk = {
