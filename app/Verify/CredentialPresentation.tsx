@@ -22,11 +22,13 @@ import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { useWallet } from "@/contexts/WalletContext";
 import { StoredCredential } from "@/types";
 import { RequestObject } from "@hdcx/wallet-core";
+import { getRequiredClaimsFromDCQL } from "@/utils/dcql";
 
 export default function CredentialPresentationScreen() {
   const walletSDK = useWallet();
   const { requestUri } = useLocalSearchParams<{ requestUri: string }>();
   const [requestObject, setRequestObject] = useState<RequestObject>();
+  const [requiredClaims, setRequiredClaims] = useState<string[]>([]);
 
   const { isLoading: isVerificationLoading, withLoading } = useAsyncAction({
     errorTitle: "Load Request Error",
@@ -39,6 +41,13 @@ export default function CredentialPresentationScreen() {
 
     return withLoading(async () => {
       const reqObject = await walletSDK.load(requestUri);
+      const query = reqObject?.dcql_query;
+
+      if (query) {
+        const claims = getRequiredClaimsFromDCQL(query);
+        setRequiredClaims(claims);
+      }
+
       setRequestObject(reqObject);
       return { isSuccess: true };
     }, "Failed to load request object");
@@ -58,6 +67,40 @@ export default function CredentialPresentationScreen() {
     }
   }, [requestObject, walletSDK]);
 
+  const {
+    credentials,
+    setCredentials,
+    selectedCredential,
+    carouselRef,
+    progress,
+    setCurrentIndex,
+    onPressPagination,
+  } = useCredentialCarousel();
+
+  const isLoading = !selectedCredential;
+
+  const { selectedOptions, toggleOption } = useClaimSelector(
+    selectedCredential,
+    requiredClaims
+  );
+
+  useEffect(() => {
+    (async function load() {
+      const result = await loadRequestObject();
+
+      if (!result.isSuccess) {
+        router.push({ pathname: "/" });
+      }
+    })();
+  }, [loadRequestObject]);
+
+  useEffect(() => {
+    (async function fetchCredentials() {
+      const creds = await loadCredentials();
+      setCredentials(creds);
+    })();
+  }, [loadCredentials]);
+
   const presentCredential = useCallback(
     async (
       credential: StoredCredential
@@ -73,7 +116,7 @@ export default function CredentialPresentationScreen() {
       try {
         const result = await walletSDK.present(
           credential.raw,
-          PRESENTATION_FRAME,
+          selectedOptions,
           requestObject
         );
 
@@ -93,42 +136,8 @@ export default function CredentialPresentationScreen() {
         };
       }
     },
-    [walletSDK, requestObject]
+    [walletSDK, requestObject, selectedOptions]
   );
-
-  const {
-    credentials,
-    setCredentials,
-    selectedCredential,
-    carouselRef,
-    progress,
-    setCurrentIndex,
-    onPressPagination,
-  } = useCredentialCarousel();
-
-  const isLoading = !selectedCredential;
-
-  const { selectedOptions, toggleOption } = useClaimSelector(
-    selectedCredential,
-    REQUIRED_CLAIMS
-  );
-
-  useEffect(() => {
-    (async function load() {
-      const result = await loadRequestObject();
-
-      if (!result.isSuccess) {
-        router.push({ pathname: "/" });
-      }
-    })();
-  }, [loadRequestObject]);
-
-  useEffect(() => {
-    (async function fetchCredentials() {
-      const creds = await loadCredentials();
-      setCredentials(creds);
-    })();
-  }, [loadCredentials]);
 
   const handlePressPresent = async () => {
     if (isVerificationLoading) return;
@@ -200,7 +209,7 @@ export default function CredentialPresentationScreen() {
               credential={selectedCredential}
               selectedOptions={selectedOptions}
               onToggleOption={toggleOption}
-              requiredClaims={REQUIRED_CLAIMS}
+              requiredClaims={requiredClaims}
             />
           </View>
 
@@ -277,7 +286,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const REQUIRED_CLAIMS = ["iss", "vct"] as const;
 const PRESENTATION_FRAME = {
   family_name: true,
   given_name: true,

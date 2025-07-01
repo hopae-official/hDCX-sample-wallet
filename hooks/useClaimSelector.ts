@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StoredCredential } from "@/types";
 
 export type ClaimSelectorOptions = {
@@ -9,22 +9,29 @@ export function useClaimSelector(
   credential: StoredCredential | null,
   requiredClaims: readonly string[] = []
 ) {
-  const [selectedOptions, setSelectedOptions] = useState<ClaimSelectorOptions>(() => {
-    if (!credential) return {};
-    
-    const initialOptions = Object.keys(credential).reduce(
-      (acc, key) => ({ ...acc, [key]: false }),
-      {}
-    );
+  const [selectedOptions, setSelectedOptions] = useState<ClaimSelectorOptions>(
+    {}
+  );
 
-    return {
-      ...initialOptions,
-      ...requiredClaims.reduce((acc, claim) => ({ ...acc, [claim]: true }), {}),
-    };
-  });
+  useEffect(() => {
+    if (!credential) return;
 
-  const toggleOption = (option: keyof typeof selectedOptions) => {
-    if (requiredClaims.includes(option as any)) return;
+    const initialOptions = Object.keys(credential)
+      .filter((key) => key !== "raw" && key !== "cnf")
+      .reduce<ClaimSelectorOptions>((acc, key) => {
+        acc[key] = false;
+        return acc;
+      }, {});
+
+    requiredClaims.forEach((claim) => {
+      initialOptions[claim] = true;
+    });
+
+    setSelectedOptions(initialOptions);
+  }, [credential, requiredClaims]);
+
+  const toggleOption = (option: string) => {
+    if (requiredClaims.includes(option)) return;
 
     setSelectedOptions((prev) => ({
       ...prev,

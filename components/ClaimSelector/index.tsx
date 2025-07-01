@@ -63,6 +63,7 @@ const NestedClaim = ({
 
   if (Array.isArray(value) || isValidValue(value)) {
     const isRequired = requiredClaims.includes(path);
+
     return (
       <InfoItem
         label={label}
@@ -128,10 +129,10 @@ export function ClaimSelector({
     ([key]) => key !== "raw" && key !== "cnf"
   );
   const requiredClaimEntries = allClaims.filter(([key]) =>
-    requiredClaims.some((path) => path.startsWith(key))
+    requiredClaims.some((path) => path === key)
   );
   const optionalClaimEntries = allClaims.filter(
-    ([key]) => !requiredClaims.some((path) => path.startsWith(key))
+    ([key]) => !requiredClaims.some((path) => path === key)
   );
 
   return (

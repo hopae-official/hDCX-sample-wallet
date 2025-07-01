@@ -20,6 +20,7 @@ import { useWallet } from "@/contexts/WalletContext";
 import { useBleConnection } from "@/hooks/useBleConnection";
 import logger from "@/utils/logger";
 import { RequestObject } from "@hdcx/wallet-core";
+import { getRequiredClaimsFromDCQL } from "@/utils/dcql";
 
 const REQUIRED_CLAIMS = ["iss", "vct"] as const;
 const PRESENTATION_FRAME = {
@@ -45,19 +46,27 @@ export default function ProximityCredentialPresentationScreen() {
     onPressPagination,
   } = useCredentialCarousel();
 
-  const { selectedOptions, toggleOption } = useClaimSelector(
-    selectedCredential,
-    REQUIRED_CLAIMS
-  );
-
   const [requestObject, setRequestObject] = useState<RequestObject | null>(
     null
+  );
+  const [requiredClaims, setRequiredClaims] = useState<string[]>([]);
+
+  const { selectedOptions, toggleOption } = useClaimSelector(
+    selectedCredential,
+    requiredClaims
   );
 
   const { connectedDevice } = useBleConnection({
     onReceiveRequestObject: (value) => setRequestObject(value),
     onReceivePresentationResult: () => router.replace("/Verify/VerifyResult"),
   });
+
+  useEffect(() => {
+    if (!requestObject) return;
+
+    const claims = getRequiredClaimsFromDCQL(requestObject.dcql_query);
+    setRequiredClaims(claims);
+  }, [requestObject]);
 
   useEffect(() => {
     (async function loadCredentials() {
@@ -73,7 +82,7 @@ export default function ProximityCredentialPresentationScreen() {
       await walletSDK.bleService.present(
         connectedDevice,
         selectedCredential.raw,
-        PRESENTATION_FRAME,
+        selectedOptions,
         requestObject
       );
     } catch (e) {
@@ -140,7 +149,7 @@ export default function ProximityCredentialPresentationScreen() {
             credential={selectedCredential}
             selectedOptions={selectedOptions}
             onToggleOption={toggleOption}
-            requiredClaims={REQUIRED_CLAIMS}
+            requiredClaims={requiredClaims}
           />
         </View>
 

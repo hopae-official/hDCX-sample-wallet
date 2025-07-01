@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    paddingVertical: 5,
   },
   labelContainer: {
     flexDirection: "row",
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
     color: "gray",
   },
   value: {
-    fontSize: 14,
+    fontSize: 16,
     color: Colors.light.text,
   },
   requiredBadge: {
