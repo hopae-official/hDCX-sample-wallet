@@ -92,17 +92,13 @@ export default function SampleVerifierScreen() {
             ],
             onWriteRequest: async (value) => {
               try {
-                console.log("value ** ", value);
                 const cleanValue = value.replace(/\s/g, "");
                 const decodedValue = base64.decode(cleanValue);
-                console.log("decodedValue ** ", decodedValue);
 
                 // Parse chunk metadata (format: index:total:data)
                 const [indexStr, totalStr, chunkData] = decodedValue.split(":");
                 const chunkIndex = parseInt(indexStr, 10);
                 const totalChunks = parseInt(totalStr, 10);
-
-                console.log(`Received chunk ${chunkIndex + 1}/${totalChunks}`);
 
                 // Create or update chunk array for this message
                 const messageKey = `${CHARACTERISTIC_UUID}_${totalChunks}`;
@@ -121,12 +117,10 @@ export default function SampleVerifierScreen() {
                 if (isComplete) {
                   // Combine all chunks
                   const completeData = chunkStore[messageKey].join("");
-                  console.log("Received complete data:", completeData);
 
                   try {
                     // Parse the complete data
                     const decoded = base64.decode(completeData);
-                    console.log("Decoded complete data:", decoded);
 
                     if (
                       decoded.trim().startsWith("{") ||

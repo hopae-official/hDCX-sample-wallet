@@ -21,16 +21,15 @@ import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { useWallet } from "@/contexts/WalletContext";
 import { StoredCredential } from "@/types";
 import { RequestObject } from "@hdcx/wallet-core";
-import { ClaimSelectorOptions } from "@/hooks/useClaimSelector";
 
 export default function CredentialPresentationScreen() {
   const walletSDK = useWallet();
   const { requestUri } = useLocalSearchParams<{ requestUri: string }>();
   const [requestObject, setRequestObject] = useState<RequestObject>();
   const [requiredClaims, setRequiredClaims] = useState<string[]>([]);
-  const [selectedOptions, setSelectedOptions] = useState<ClaimSelectorOptions>(
-    {}
-  );
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, boolean>
+  >({});
 
   const {
     isLoading: isVerificationLoading,

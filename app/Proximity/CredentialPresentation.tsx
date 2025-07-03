@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@/components/ui/button";
 import Carousel, { Pagination } from "react-native-reanimated-carousel";
@@ -15,11 +15,10 @@ import { CredentialCard } from "@/components/CredentialCard";
 import { ProviderInfo } from "@/components/ProviderInfo";
 import { useCredentialCarousel } from "@/hooks/useCredentialCarousel";
 import { ClaimSelector } from "@/components/ClaimSelector";
-import { useClaimSelector } from "@/hooks/useClaimSelector";
 import { useWallet } from "@/contexts/WalletContext";
 import { useBleConnection } from "@/hooks/useBleConnection";
 import logger from "@/utils/logger";
-import { rawDCQL, RequestObject } from "@hdcx/wallet-core";
+import { RequestObject } from "@hdcx/wallet-core";
 import { getRequiredClaimsFromDCQL } from "@/utils/dcql";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { FullscreenLoader } from "@/components/FullscreenLoader";
@@ -40,10 +39,28 @@ export default function ProximityCredentialPresentationScreen() {
     null
   );
   const [requiredClaims, setRequiredClaims] = useState<string[]>([]);
+  const [selectedOptions, setSelectedOptions] = useState<
+    Record<string, boolean>
+  >({});
 
-  const { selectedOptions, toggleOption } = useClaimSelector(
-    selectedCredential,
-    requestObject?.dcql_query ?? ({} as rawDCQL)
+  useEffect(() => {
+    if (!requestObject) return;
+
+    const { initialOptions, requiredClaims } = walletSDK.sdService.initialize(
+      selectedCredential,
+      requestObject.dcql_query
+    );
+
+    setSelectedOptions(initialOptions);
+    setRequiredClaims(requiredClaims);
+  }, [selectedCredential, requestObject, walletSDK]);
+
+  const toggleOption = useCallback(
+    (option: string) => {
+      const updated = walletSDK.sdService.toggle(option);
+      setSelectedOptions(updated);
+    },
+    [walletSDK]
   );
 
   const {
