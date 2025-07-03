@@ -19,7 +19,7 @@ import { useClaimSelector } from "@/hooks/useClaimSelector";
 import { useWallet } from "@/contexts/WalletContext";
 import { useBleConnection } from "@/hooks/useBleConnection";
 import logger from "@/utils/logger";
-import { RequestObject } from "@hdcx/wallet-core";
+import { rawDCQL, RequestObject } from "@hdcx/wallet-core";
 import { getRequiredClaimsFromDCQL } from "@/utils/dcql";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { FullscreenLoader } from "@/components/FullscreenLoader";
@@ -43,7 +43,7 @@ export default function ProximityCredentialPresentationScreen() {
 
   const { selectedOptions, toggleOption } = useClaimSelector(
     selectedCredential,
-    requiredClaims
+    requestObject?.dcql_query ?? ({} as rawDCQL)
   );
 
   const {

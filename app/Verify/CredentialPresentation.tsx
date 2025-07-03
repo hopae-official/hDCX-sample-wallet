@@ -17,12 +17,11 @@ import { ProviderInfo } from "@/components/ProviderInfo";
 import { useCredentialCarousel } from "@/hooks/useCredentialCarousel";
 import { FullscreenLoader } from "@/components/FullscreenLoader";
 import { ClaimSelector } from "@/components/ClaimSelector";
-import { useClaimSelector } from "@/hooks/useClaimSelector";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { useWallet } from "@/contexts/WalletContext";
 import { StoredCredential } from "@/types";
 import { RequestObject } from "@hdcx/wallet-core";
-import { getRequiredClaimsFromDCQL } from "@/utils/dcql";
+import { ClaimSelectorOptions } from "@/hooks/useClaimSelector";
 
 export default function CredentialPresentationScreen() {
   const walletSDK = useWallet();
@@ -48,13 +47,6 @@ export default function CredentialPresentationScreen() {
 
     return withLoading(async () => {
       const reqObject = await walletSDK.load(requestUri);
-      const query = reqObject?.dcql_query;
-
-      if (query) {
-        const claims = getRequiredClaimsFromDCQL(query);
-        setRequiredClaims(claims);
-      }
-
       setRequestObject(reqObject);
       return { isSuccess: true };
     }, "Failed to load request object");
@@ -64,7 +56,10 @@ export default function CredentialPresentationScreen() {
     if (!requestObject) return [];
 
     try {
-      const storedCredentials = await walletSDK.selectCredentials();
+      const storedCredentials = await walletSDK.selectCredentials(
+        requestObject.dcql_query
+      );
+
       return storedCredentials ? JSON.parse(storedCredentials) : [];
     } catch (error) {
       const errorMessage =
@@ -84,9 +79,27 @@ export default function CredentialPresentationScreen() {
     onPressPagination,
   } = useCredentialCarousel();
 
-  const { selectedOptions, toggleOption } = useClaimSelector(
-    selectedCredential,
-    requiredClaims
+  const [selectedOptions, setSelectedOptions] = useState<ClaimSelectorOptions>(
+    {}
+  );
+
+  useEffect(() => {
+    if (!requestObject) return;
+
+    const { initialOptions, requiredClaims } = walletSDK.sdService.initialize(
+      selectedCredential,
+      requestObject.dcql_query
+    );
+    setSelectedOptions(initialOptions);
+    setRequiredClaims(requiredClaims);
+  }, [selectedCredential, requestObject, walletSDK]);
+
+  const toggleOption = useCallback(
+    (option: string) => {
+      const updated = walletSDK.sdService.toggle(option);
+      setSelectedOptions(updated);
+    },
+    [walletSDK]
   );
 
   useEffect(() => {
@@ -300,14 +313,3 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
 });
-
-const PRESENTATION_FRAME = {
-  family_name: true,
-  given_name: true,
-  birth_date: true,
-  age_over_18: true,
-  issuance_date: true,
-  expiry_date: true,
-  issuing_country: true,
-  issuing_authority: true,
-} as const;

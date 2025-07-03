@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { StoredCredential } from "@/types";
+import { useWallet } from "@/contexts/WalletContext";
+import { rawDCQL } from "@vdcs/dcql";
 
 export type ClaimSelectorOptions = {
   [key: string]: boolean;
@@ -7,37 +9,29 @@ export type ClaimSelectorOptions = {
 
 export function useClaimSelector(
   credential: StoredCredential | null,
-  requiredClaims: readonly string[] = []
+  query: rawDCQL
 ) {
+  const walletSDK = useWallet();
+
   const [selectedOptions, setSelectedOptions] = useState<ClaimSelectorOptions>(
     {}
   );
 
   useEffect(() => {
-    if (!credential) return;
-
-    const initialOptions = Object.keys(credential)
-      .filter((key) => key !== "raw" && key !== "cnf")
-      .reduce<ClaimSelectorOptions>((acc, key) => {
-        acc[key] = false;
-        return acc;
-      }, {});
-
-    requiredClaims.forEach((claim) => {
-      initialOptions[claim] = true;
-    });
-
+    const { initialOptions } = walletSDK.sdService.initialize(
+      credential,
+      query
+    );
     setSelectedOptions(initialOptions);
-  }, [credential, requiredClaims]);
+  }, [credential, walletSDK]);
 
-  const toggleOption = (option: string) => {
-    if (requiredClaims.includes(option)) return;
-
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [option]: !prev[option],
-    }));
-  };
+  const toggleOption = useCallback(
+    (option: string) => {
+      const updated = walletSDK.sdService.toggle(option);
+      setSelectedOptions(updated);
+    },
+    [walletSDK]
+  );
 
   return {
     selectedOptions,
