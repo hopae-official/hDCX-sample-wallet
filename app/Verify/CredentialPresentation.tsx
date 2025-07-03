@@ -28,6 +28,9 @@ export default function CredentialPresentationScreen() {
   const { requestUri } = useLocalSearchParams<{ requestUri: string }>();
   const [requestObject, setRequestObject] = useState<RequestObject>();
   const [requiredClaims, setRequiredClaims] = useState<string[]>([]);
+  const [selectedOptions, setSelectedOptions] = useState<ClaimSelectorOptions>(
+    {}
+  );
 
   const {
     isLoading: isVerificationLoading,
@@ -40,35 +43,6 @@ export default function CredentialPresentationScreen() {
     errorTitle: "Load Request Error",
   });
 
-  const loadRequestObject = useCallback(async () => {
-    if (!requestUri) {
-      throw new Error("Cannot load request object: Missing request URI");
-    }
-
-    return withLoading(async () => {
-      const reqObject = await walletSDK.load(requestUri);
-      setRequestObject(reqObject);
-      return { isSuccess: true };
-    }, "Failed to load request object");
-  }, [requestUri, walletSDK, withLoading]);
-
-  const loadCredentials = useCallback(async () => {
-    if (!requestObject) return [];
-
-    try {
-      const storedCredentials = await walletSDK.selectCredentials(
-        requestObject.dcql_query
-      );
-
-      return storedCredentials ? JSON.parse(storedCredentials) : [];
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to load credentials";
-      Alert.alert("Error:", errorMessage);
-      return [];
-    }
-  }, [requestObject, walletSDK]);
-
   const {
     credentials,
     setCredentials,
@@ -79,10 +53,6 @@ export default function CredentialPresentationScreen() {
     onPressPagination,
   } = useCredentialCarousel();
 
-  const [selectedOptions, setSelectedOptions] = useState<ClaimSelectorOptions>(
-    {}
-  );
-
   useEffect(() => {
     if (!requestObject) return;
 
@@ -90,6 +60,7 @@ export default function CredentialPresentationScreen() {
       selectedCredential,
       requestObject.dcql_query
     );
+
     setSelectedOptions(initialOptions);
     setRequiredClaims(requiredClaims);
   }, [selectedCredential, requestObject, walletSDK]);
@@ -103,21 +74,41 @@ export default function CredentialPresentationScreen() {
   );
 
   useEffect(() => {
-    (async function load() {
-      const result = await loadRequestObject();
+    (async function loadRequestObject() {
+      if (!requestUri) {
+        throw new Error("Cannot load request object: Missing request URI");
+      }
+
+      const result = await withLoading(async () => {
+        const reqObject = await walletSDK.load(requestUri);
+        setRequestObject(reqObject);
+        return { isSuccess: true };
+      }, "Failed to load request object");
 
       if (!result.isSuccess) {
         router.push({ pathname: "/" });
       }
     })();
-  }, [loadRequestObject]);
+  }, [requestUri, walletSDK, withLoading]);
 
   useEffect(() => {
     (async function fetchCredentials() {
-      const creds = await loadCredentials();
-      setCredentials(creds);
+      if (!requestObject) return;
+
+      try {
+        const storedCredentials = await walletSDK.selectCredentials(
+          requestObject.dcql_query
+        );
+
+        setCredentials(storedCredentials ? JSON.parse(storedCredentials) : []);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to load credentials";
+        Alert.alert("Error:", errorMessage);
+        setCredentials([]);
+      }
     })();
-  }, [loadCredentials]);
+  }, [requestObject, walletSDK]);
 
   const presentCredential = useCallback(
     async (
