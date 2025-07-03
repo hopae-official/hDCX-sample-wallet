@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Colors } from "@/constants/Colors";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,16 @@ export default function HomeScreen() {
 
     const verifyRegex = /request_uri=([^&]*)/;
     const verifyMatch = result.match(verifyRegex);
+
+    const issueRegex = /credential_offer_uri=([^&]+)/;
+    const issueMatch = result.match(issueRegex);
+
+    if (issueMatch && issueMatch[1]) {
+      router.push({
+        pathname: "/Issue/CredentialIssuance",
+        params: { credentialOfferUri: result },
+      });
+    }
 
     if (verifyMatch && verifyMatch[1]) {
       router.push({
