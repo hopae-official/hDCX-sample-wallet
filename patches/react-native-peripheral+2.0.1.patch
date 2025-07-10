@@ -1,0 +1,47 @@
+diff --git a/node_modules/react-native-peripheral/android/build.gradle b/node_modules/react-native-peripheral/android/build.gradle
+index 0123456..1234567 100644
+--- a/node_modules/react-native-peripheral/android/build.gradle
++++ b/node_modules/react-native-peripheral/android/build.gradle
+@@ -20,7 +20,7 @@ buildscript {
+ }
+
+ apply plugin: 'com.android.library'
+-apply plugin: 'maven'
++apply plugin: 'maven-publish'
+
+ // Matches values in recent template from React Native 0.59 / 0.60
+ // https://github.com/facebook/react-native/blob/0.59-stable/template/android/build.gradle#L5-L9
+@@ -99,16 +99,15 @@ afterEvaluate { project ->
+     task androidJavadoc(type: Javadoc) {
+         source = android.sourceSets.main.java.srcDirs
+         classpath += files(android.bootClasspath)
+-        classpath += files(project.getConfigurations().getByName('compile').asList())
+         include '**/*.java'
+     }
+
+     task androidJavadocJar(type: Jar, dependsOn: androidJavadoc) {
+-        classifier = 'javadoc'
++        archiveClassifier = 'javadoc'
+         from androidJavadoc.destinationDir
+     }
+
+     task androidSourcesJar(type: Jar) {
+-        classifier = 'sources'
++        archiveClassifier = 'sources'
+         from android.sourceSets.main.java.srcDirs
+         include '**/*.java'
+     }
+@@ -127,13 +126,5 @@ afterEvaluate { project ->
+         archives androidJavadocJar
+     }
+
+-    task installArchives(type: Upload) {
+-        configuration = configurations.archives
+-        repositories.mavenDeployer {
+-            // Deploy to react-native-event-bridge/maven, ready to publish to npm
+-            repository url: "file://${projectDir}/../android/maven"
+-            configureReactNativePom pom
+-        }
+-    }
++    // Removed installArchives task - not compatible with maven-publish plugin
+ }

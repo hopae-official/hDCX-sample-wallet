@@ -20,16 +20,18 @@ import { ClaimSelector } from "@/components/ClaimSelector";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { useWallet } from "@/contexts/WalletContext";
 import { StoredCredential } from "@/types";
-import { RequestObject } from "@hdcx/wallet-core";
+import { RequestObject, PresentationSession } from "@hdcx/wallet-core";
 
 export default function CredentialPresentationScreen() {
   const walletSDK = useWallet();
   const { requestUri } = useLocalSearchParams<{ requestUri: string }>();
-  const [requestObject, setRequestObject] = useState<RequestObject>();
+  const [presentationSession, setPresentationSession] =
+    useState<PresentationSession>();
   const [requiredClaims, setRequiredClaims] = useState<string[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, boolean>
   >({});
+  const requestObject = presentationSession?.requestObject;
 
   const {
     isLoading: isVerificationLoading,
@@ -53,23 +55,23 @@ export default function CredentialPresentationScreen() {
   } = useCredentialCarousel();
 
   useEffect(() => {
-    if (!requestObject) return;
+    if (!presentationSession || !selectedCredential) return;
 
-    const { initialOptions, requiredClaims } = walletSDK.sdService.initialize(
-      selectedCredential,
-      requestObject.dcql_query
-    );
+    const { initialSelectedClaims, requiredClaims } =
+      presentationSession.setSelectedCredential(selectedCredential);
 
-    setSelectedOptions(initialOptions);
+    setSelectedOptions(initialSelectedClaims);
     setRequiredClaims(requiredClaims);
-  }, [selectedCredential, requestObject, walletSDK]);
+  }, [presentationSession, selectedCredential]);
 
   const toggleOption = useCallback(
     (option: string) => {
-      const updated = walletSDK.sdService.toggle(option);
+      if (!presentationSession) return;
+
+      const updated = presentationSession.toggleClaim(option);
       setSelectedOptions(updated);
     },
-    [walletSDK]
+    [presentationSession]
   );
 
   useEffect(() => {
@@ -79,8 +81,8 @@ export default function CredentialPresentationScreen() {
       }
 
       const result = await withLoading(async () => {
-        const reqObject = await walletSDK.load(requestUri);
-        setRequestObject(reqObject);
+        const presentationSession = await walletSDK.load(requestUri);
+        setPresentationSession(presentationSession);
         return { isSuccess: true };
       }, "Failed to load request object");
 
