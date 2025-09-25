@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  react-native-peripheral:
+    hash: iiw2glxebjbiryi774ge5b6ofm
+    path: patches/react-native-peripheral.patch
+
 importers:
 
   .:
@@ -145,7 +150,7 @@ importers:
         version: 3.16.1
       react-native-peripheral:
         specifier: ^0.0.3
-        version: 0.0.3(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
+        version: 0.0.3(patch_hash=iiw2glxebjbiryi774ge5b6ofm)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       react-native-reanimated:
         specifier: ~3.17.5
         version: 3.17.5(@babel/core@7.27.4)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -9176,7 +9181,7 @@ snapshots:
 
   react-native-nfc-manager@3.16.1: {}
 
-  react-native-peripheral@0.0.3(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
+  react-native-peripheral@0.0.3(patch_hash=iiw2glxebjbiryi774ge5b6ofm)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0):
     dependencies:
       react: 19.0.0
       react-native: 0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)
