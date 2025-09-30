@@ -62,8 +62,9 @@ export const useQRScanner = ({ onScanSuccess, onScanError }: UseQRScannerProps =
     async (event: BarcodeEvent) => {
       if (scanned) return;
 
-      const { x, y } = event.bounds.origin;
-      if (!isInScanArea(x, y)) return;
+      // const { x, y } = event.bounds.origin;
+      // if (!isInScanArea(x, y)) return;
+      logger.log("[handleBarcodeScanned EVENT]:", JSON.stringify(event));
 
       setScanned(true);
 
@@ -98,7 +99,8 @@ export const useQRScanner = ({ onScanSuccess, onScanError }: UseQRScannerProps =
       onScanError?.();
       setScanned(false);
     },
-    [scanned, isInScanArea, onScanSuccess, onScanError]
+    // [scanned, isInScanArea, onScanSuccess, onScanError]
+    [scanned, onScanSuccess, onScanError]
   );
 
   return {
