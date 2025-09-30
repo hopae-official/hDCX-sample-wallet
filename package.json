@@ -2,6 +2,7 @@
   "name": "hdcx-sample-wallet",
   "main": "expo-router/entry",
   "version": "0.1.0",
+  "packageManager": "pnpm@9.12.0",
   "pnpm": {
     "patchedDependencies": {
       "react-native-peripheral": "patches/react-native-peripheral.patch"
