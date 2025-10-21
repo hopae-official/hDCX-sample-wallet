@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
@@ -22,16 +23,20 @@ type QRScannerProps = {
 };
 
 export const QRScanner = ({ onBarcodeScanned, isLoading }: QRScannerProps) => {
+  const [ready, setReady] = useState(false);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <CameraView
-        facing="back"
-        barcodeScannerSettings={{
-          barcodeTypes: ["qr"],
-        }}
-        onBarcodeScanned={onBarcodeScanned}
+    <SafeAreaView style={styles.container} onLayout={() => setReady(true)}>
+      {ready && (
+        <CameraView
+          facing="back"
+          barcodeScannerSettings={{
+            barcodeTypes: ["qr"],
+          }}
+          onBarcodeScanned={onBarcodeScanned}
         style={StyleSheet.absoluteFillObject}
-      />
+        />
+      )}
       {isLoading && (
         <ActivityIndicator
           color={"white"}

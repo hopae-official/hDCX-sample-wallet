@@ -17,8 +17,8 @@ importers:
         specifier: ^14.1.0
         version: 14.1.0(expo-font@13.3.1(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       '@hdcx/wallet-core':
-        specifier: ^0.2.0
-        version: 0.2.0(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-ble-plx@3.5.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-nfc-manager@3.16.1)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))
+        specifier: ^0.2.1
+        version: 0.2.1(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-ble-plx@3.5.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-nfc-manager@3.16.1)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))
       '@m-doc/decode':
         specifier: ^0.1.0
         version: 0.1.0
@@ -50,8 +50,8 @@ importers:
         specifier: ^5.67.3
         version: 5.80.7(react@19.0.0)
       '@vdcs/dcql':
-        specifier: ^0.1.8
-        version: 0.1.8
+        specifier: ^0.2.1
+        version: 0.2.1
       '@vdcs/jwt':
         specifier: ^0.1.4
         version: 0.1.4
@@ -859,8 +859,8 @@ packages:
     resolution: {integrity: sha512-ReZxZ8pdnoI3tP/dNnJdnmAk7uLT4FjsKDGW7YeDdvdOMz2XCQSmSCM9IWlrXuWtMF9zeSB6WJtEhCQ41gQOfw==}
     hasBin: true
 
-  '@hdcx/wallet-core@0.2.0':
-    resolution: {integrity: sha512-Bu6kr1UpoSpz8zh7DSLBj7dL0TRHVZS3yweWlpxA69bx+xTUmaUkKmgcs0BcByH1i1ddFB5YqBibNFjV5cTtyA==}
+  '@hdcx/wallet-core@0.2.1':
+    resolution: {integrity: sha512-ICq9awAGEUa11DRPatecEVjTmp0OQncFJ+1Qi49RLO2E9HbsjAdaEh3cGWH6ow1AasnH/bMy6x5GW6W2/Wlmug==}
     engines: {node: '>=18'}
     peerDependencies:
       react-native: 0.79.2
@@ -1440,16 +1440,16 @@ packages:
     peerDependencies:
       '@urql/core': ^5.0.0
 
-  '@vdcs/dcql@0.1.8':
-    resolution: {integrity: sha512-x2cTXFc0t61oC3V9BxYFYcSXJh/EwyiOMO4ycsp925MkAEoYph/4FvavqXoTc+l/JZWRsXP+B43siwk6QKQ57Q==}
-    engines: {node: '>=16'}
-
   '@vdcs/dcql@0.1.9':
     resolution: {integrity: sha512-8hO2VSM015FTOR/Dx18Bv0TZ/EGBwYmP2HcMPznuOs1Q3FKGipQbYind02KSZpXGw/UPU5Gx8gjLFdBEHKM7CQ==}
     engines: {node: '>=16'}
 
   '@vdcs/dcql@0.2.0':
     resolution: {integrity: sha512-Hd38pMOxDeeZJ+Y/U7HwYR1cHYpv+TOluDEFaeAQOqYHjG75uFbZbVijms1AtRIo3sHB0Z7UzlyVNS4RN2fR9w==}
+    engines: {node: '>=16'}
+
+  '@vdcs/dcql@0.2.1':
+    resolution: {integrity: sha512-CXDc1EamfDgPzgLz69547gWs3xkWzvcjUxLwZSTQQoATl9ZHFDRhGGX2OZPLIskuGQnwsWgka/q0tulH+r3eVA==}
     engines: {node: '>=16'}
 
   '@vdcs/jwt@0.1.4':
@@ -5612,7 +5612,7 @@ snapshots:
       find-up: 5.0.0
       js-yaml: 4.1.0
 
-  '@hdcx/wallet-core@0.2.0(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-ble-plx@3.5.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-nfc-manager@3.16.1)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))':
+  '@hdcx/wallet-core@0.2.1(expo@53.0.11(@babel/core@7.27.4)(@expo/metro-runtime@5.0.4(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0)))(react-native-webview@13.13.5(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-ble-plx@3.5.0(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-nfc-manager@3.16.1)(react-native@0.79.2(@babel/core@7.27.4)(@types/react@19.0.14)(react@19.0.0))':
     dependencies:
       '@noble/curves': 1.9.2
       '@noble/hashes': 1.8.0
@@ -6407,11 +6407,11 @@ snapshots:
       '@urql/core': 5.1.1
       wonka: 6.3.5
 
-  '@vdcs/dcql@0.1.8': {}
-
   '@vdcs/dcql@0.1.9': {}
 
   '@vdcs/dcql@0.2.0': {}
+
+  '@vdcs/dcql@0.2.1': {}
 
   '@vdcs/jwt@0.1.4':
     dependencies:
