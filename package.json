@@ -39,7 +39,7 @@
     "@vdcs/jwt": "^0.1.4",
     "@vdcs/oid4vci-client": "^0.1.4",
     "@vdcs/oid4vp-client": "^0.2.0",
-    "axios": "^1.8.2",
+    "axios": "^1.13.5",
     "base64-js": "^1.5.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.0.0",
